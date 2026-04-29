@@ -48,6 +48,9 @@ $pdo->prepare('UPDATE usuarios SET ultimo_login = NOW() WHERE id = ?')->execute(
 
 registrarBitacora($user['id'], 'login', 'auth', null, null, 'Login exitoso');
 
+// Asegurar que la sesión se guarda antes de responder
+session_write_close();
+
 jsonSuccess('Login exitoso', [
     'usuario' => [
         'id'     => $user['id'],

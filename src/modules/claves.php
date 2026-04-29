@@ -65,6 +65,7 @@ function generarLlavesRSA(int $usuarioId): array {
             VALUES (?, ?, ?, ?, ?)
         ');
         $stmt->execute([
+            $usuarioId,
             $encrypted['encrypted'] . '::' . $encrypted['salt'],
             $encrypted['iv'],
             $publicPem,

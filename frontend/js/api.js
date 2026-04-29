@@ -19,50 +19,50 @@ async function apiFetch(path, options = {}) {
   return res;
 }
 
-// ─── AUTH ───
+// AUTH
 export const auth = {
-  login:   (email, password) => apiFetch('/auth/login.php',    { method: 'POST', body: JSON.stringify({ email, password }) }),
-  logout:  ()               => apiFetch('/auth/logout.php',   { method: 'POST' }),
-  register:(nombre,email,password) => apiFetch('/auth/register.php', { method: 'POST', body: JSON.stringify({ nombre, email, password }) }),
-  session: ()               => apiFetch('/auth/session.php'),
+  login: (email, password) => apiFetch('/auth/login.php', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  logout: () => apiFetch('/auth/logout.php', { method: 'POST' }),
+  register: (nombre, email, password) => apiFetch('/auth/register.php', { method: 'POST', body: JSON.stringify({ nombre, email, password }) }),
+  session: () => apiFetch('/auth/session.php'),
 };
 
-// ─── DOCUMENTOS ───
+// DOCUMENTOS
 export const documentos = {
-  list:   ()       => apiFetch('/api/documentos-list.php'),
-  create: (data)   => apiFetch('/api/documentos-create.php',  { method: 'POST', body: JSON.stringify(data) }),
-  update: (data)   => apiFetch('/api/documentos-update.php',  { method: 'POST', body: JSON.stringify(data) }),
-  delete: (id)     => apiFetch('/api/documentos-delete.php',  { method: 'POST', body: JSON.stringify({ id }) }),
-  emitir: (id)     => apiFetch('/api/documentos-emitir.php',  { method: 'POST', body: JSON.stringify({ id }) }),
-  revocar:(id, motivo) => apiFetch('/api/documentos-revocar.php', { method: 'POST', body: JSON.stringify({ id, motivo }) }),
+  list: () => apiFetch('/api/documentos-list.php'),
+  create: (data) => apiFetch('/api/documentos-create.php', { method: 'POST', body: JSON.stringify(data) }),
+  update: (data) => apiFetch('/api/documentos-update.php', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch('/api/documentos-delete.php', { method: 'POST', body: JSON.stringify({ id }) }),
+  emitir: (id) => apiFetch('/api/documentos-emitir.php', { method: 'POST', body: JSON.stringify({ id }) }),
+  revocar: (id, motivo) => apiFetch('/api/documentos-revocar.php', { method: 'POST', body: JSON.stringify({ id, motivo }) }),
 };
 
-// ─── USUARIOS ───
+// USUARIOS
 export const usuarios = {
-  list:         ()                  => apiFetch('/api/usuarios-list.php'),
-  cambiarRol:   (usuario_id, rol)   => apiFetch('/api/usuarios-cambiar-rol.php',   { method: 'POST', body: JSON.stringify({ usuario_id, rol }) }),
-  desactivar:   (usuario_id)        => apiFetch('/api/usuarios-desactivar.php',    { method: 'POST', body: JSON.stringify({ usuario_id }) }),
-  generarClaves:(usuario_id)        => apiFetch('/api/usuarios-descargar-claves.php', { method: 'POST', body: JSON.stringify({ usuario_id }) }),
+  list: () => apiFetch('/api/usuarios-list.php'),
+  cambiarRol: (usuario_id, rol) => apiFetch('/api/usuarios-cambiar-rol.php', { method: 'POST', body: JSON.stringify({ usuario_id, rol }) }),
+  desactivar: (usuario_id) => apiFetch('/api/usuarios-desactivar.php', { method: 'POST', body: JSON.stringify({ usuario_id }) }),
+  generarClaves: (usuario_id) => apiFetch('/api/usuarios-descargar-claves.php', { method: 'POST', body: JSON.stringify({ usuario_id }) }),
 };
 
-// ─── CLAVES ───
+// CLAVES
 export const claves = {
-  info:          ()     => apiFetch('/api/claves-info.php'),
-  generarToken:  (tipo) => apiFetch('/api/claves-generar-token.php', { method: 'POST', body: JSON.stringify({ tipo: tipo || 'key' }) }),
-  descargarUrl:  (token, tipo) => `${BASE}/api/claves-descargar.php?token=${encodeURIComponent(token)}&tipo=${tipo || 'key'}`,
+  info: () => apiFetch('/api/claves-info.php'),
+  generarToken: (tipo) => apiFetch('/api/claves-generar-token.php', { method: 'POST', body: JSON.stringify({ tipo: tipo || 'key' }) }),
+  descargarUrl: (token, tipo) => `${BASE}/api/claves-descargar.php?token=${encodeURIComponent(token)}&tipo=${tipo || 'key'}`,
 };
 
-// ─── BITÁCORA ───
+// BITACORA
 export const bitacora = {
   list: (limit = 100, offset = 0) => apiFetch(`/api/bitacora-list.php?limit=${limit}&offset=${offset}`),
 };
 
-// ─── CONSULTA PÚBLICA ───
+// CONSULTA PUBLICA
 export const consulta = {
   verificar: (folio) => apiFetch(`/api/consulta_qr.php?token=${encodeURIComponent(folio)}`),
 };
 
-// ─── TOAST ───
+// TOAST
 export function toast(msg, type = 'info') {
   const c = document.getElementById('toast-container');
   if (!c) return;
@@ -73,7 +73,7 @@ export function toast(msg, type = 'info') {
   setTimeout(() => t.remove(), 4000);
 }
 
-// ─── FORMATO ───
+// FORMATO
 export function fmtDate(d) {
   if (!d) return '—';
   return new Date(d).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });

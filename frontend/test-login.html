@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Login</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 50px auto; }
+    .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Casa Monarca - Test Login</h1>
+  <div>
+    <button onclick="testSession()">1. Test Session (sin login)</button>
+    <button onclick="testLogin()">2. Login</button>
+    <button onclick="testSessionAfter()">3. Test Session (después login)</button>
+    <button onclick="clearLog()">Clear</button>
+  </div>
+  <div id="log"></div>
+
+  <script>
+    function log(msg) {
+      const el = document.getElementById('log');
+      el.innerHTML += `<div class="log">${new Date().toLocaleTimeString()} - ${msg}</div>`;
+    }
+
+    function clearLog() {
+      document.getElementById('log').innerHTML = '';
+    }
+
+    async function testSession() {
+      log('GET /auth/session.php...');
+      try {
+        const res = await fetch('/auth/session.php', {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        log(`Status: ${res.status}`);
+        const data = await res.json();
+        log(`Response: ${JSON.stringify(data)}`);
+      } catch (e) {
+        log(`Error: ${e.message}`);
+      }
+    }
+
+    async function testLogin() {
+      log('POST /auth/login.php...');
+      try {
+        const res = await fetch('/auth/login.php', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'admin@empresa.local',
+            password: 'admin123'
+          })
+        });
+        log(`Status: ${res.status}`);
+        const data = await res.json();
+        log(`Response: ${JSON.stringify(data)}`);
+        log('Check document.cookie: ' + (document.cookie || 'NO COOKIES'));
+      } catch (e) {
+        log(`Error: ${e.message}`);
+      }
+    }
+
+    async function testSessionAfter() {
+      log('GET /auth/session.php (después login)...');
+      log('document.cookie: ' + (document.cookie || 'NO COOKIES'));
+      try {
+        const res = await fetch('/auth/session.php', {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        log(`Status: ${res.status}`);
+        const data = await res.json();
+        log(`Response: ${JSON.stringify(data)}`);
+      } catch (e) {
+        log(`Error: ${e.message}`);
+      }
+    }
+  </script>
+</body>
+</html>
