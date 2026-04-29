@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casa Monarca — Verificar documento</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="verify-page">
+  <div class="verify-card">
+    <div style="text-align:center; margin-bottom:28px;">
+      <div class="font-serif" style="font-size:28px; color:var(--white);">Casa Monarca</div>
+      <p class="text-muted" style="margin-top:8px;">Verificación pública de documentos</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Folio del documento</label>
+      <div class="flex gap-2">
+        <input type="text" class="form-input" id="folio-input" placeholder="DOC-20260428-XXXXXX" />
+        <button class="btn btn-primary" id="verify-btn">Verificar</button>
+      </div>
+    </div>
+
+    <div id="result" class="hidden"></div>
+
+    <p style="margin-top:24px; text-align:center;">
+      <a href="index.html" style="color:var(--accent); font-size:13px; text-decoration:none;">← Ir al sistema</a>
+    </p>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+  import { consulta, toast, fmtDate, badgeEstado } from './js/api.js';
+
+  document.getElementById('verify-btn').addEventListener('click', async () => {
+    const folio = document.getElementById('folio-input').value.trim();
+    if (!folio) { toast('Ingresa un folio', 'error'); return; }
+
+    const btn = document.getElementById('verify-btn');
+    btn.disabled = true; btn.textContent = 'Verificando...';
+
+    try {
+      const res = await consulta.verificar(folio);
+      const { documento: d, verificacion: v } = res.data;
+      const valid = v.firma_valida;
+
+      document.getElementById('result').innerHTML = `
+        <div class="verify-result ${valid ? 'valid' : 'invalid'}">
+          <div style="font-size:18px; font-weight:600; margin-bottom:12px; color:${valid ? 'var(--success)' : 'var(--danger)'}">
+            ${v.mensaje}
+          </div>
+          <table style="width:100%; font-size:13px;">
+            <tr><td class="text-muted" style="padding:4px 0; width:40%">Folio</td><td>${d.folio}</td></tr>
+            <tr><td class="text-muted" style="padding:4px 0">Título</td><td>${d.titulo}</td></tr>
+            <tr><td class="text-muted" style="padding:4px 0">Estado</td><td>${badgeEstado(d.estado)}</td></tr>
+            <tr><td class="text-muted" style="padding:4px 0">Creador</td><td>${d.creador}</td></tr>
+            <tr><td class="text-muted" style="padding:4px 0">Firmante</td><td>${d.firmante || '—'}</td></tr>
+            <tr><td class="text-muted" style="padding:4px 0">Emitido</td><td>${fmtDate(d.fecha_emision)}</td></tr>
+            ${d.fecha_revocacion ? `<tr><td class="text-muted" style="padding:4px 0">Revocado</td><td>${fmtDate(d.fecha_revocacion)}</td></tr>` : ''}
+            ${d.motivo_revocacion ? `<tr><td class="text-muted" style="padding:4px 0">Motivo</td><td>${d.motivo_revocacion}</td></tr>` : ''}
+          </table>
+        </div>`;
+      document.getElementById('result').classList.remove('hidden');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Verificar';
+    }
+  });
+
+  // Soporte para ?folio=DOC-... en URL
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('folio')) {
+    document.getElementById('folio-input').value = params.get('folio');
+    document.getElementById('verify-btn').click();
+  }
+</script>
+</body>
+</html>

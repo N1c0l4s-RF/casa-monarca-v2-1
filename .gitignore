@@ -1,0 +1,13 @@
+.env
+.env.local
+.DS_Store
+*.log
+/keys/*
+/database/data/*
+.vscode/
+__pycache__/
+vendor/
+node_modules/
+*.swp
+*.swo
+.phpunit.cache

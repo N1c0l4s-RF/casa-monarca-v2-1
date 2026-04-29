@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casa Monarca — Acceso</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="auth-page">
+  <!-- Branding -->
+  <div class="auth-brand">
+    <div class="auth-wordmark">Casa<br>Monarca</div>
+    <p class="auth-tagline">Plataforma segura de gestión de documentos digitales con firma RSA-3072 y auditoría completa.</p>
+  </div>
+
+  <!-- Panel de formulario -->
+  <div class="auth-form-panel">
+    <!-- LOGIN -->
+    <form class="auth-form" id="login-form">
+      <div>
+        <h2>Iniciar sesión</h2>
+        <p class="text-muted text-sm">Ingresa tus credenciales institucionales</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="login-email" placeholder="usuario@empresa.local" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-input" id="login-pass" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-primary" id="login-btn">Entrar</button>
+      <p class="auth-switch">¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
+    </form>
+
+    <!-- REGISTER -->
+    <form class="auth-form hidden" id="register-form">
+      <div>
+        <h2>Crear cuenta</h2>
+        <p class="text-muted text-sm">Completa tus datos para registrarte</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input type="text" class="form-input" id="reg-nombre" placeholder="Tu nombre" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="reg-email" placeholder="usuario@empresa.local" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña (mínimo 8 caracteres)</label>
+        <input type="password" class="form-input" id="reg-pass" placeholder="••••••••" minlength="8" required />
+      </div>
+      <button type="submit" class="btn btn-primary" id="register-btn">Registrarse</button>
+      <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="show-login">Inicia sesión</a></p>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+  import { auth, toast } from './js/api.js';
+
+  // Redirigir si ya está autenticado
+  auth.session().then(d => {
+    if (d?.data?.usuario) window.location.href = 'dashboard.html';
+  }).catch(() => {});
+
+  const loginForm    = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+
+  document.getElementById('show-register').addEventListener('click', e => {
+    e.preventDefault(); loginForm.classList.add('hidden'); registerForm.classList.remove('hidden');
+  });
+  document.getElementById('show-login').addEventListener('click', e => {
+    e.preventDefault(); registerForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+  });
+
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Ingresando...';
+    try {
+      await auth.login(
+        document.getElementById('login-email').value,
+        document.getElementById('login-pass').value
+      );
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      toast(err.message, 'error');
+      btn.disabled = false; btn.textContent = 'Entrar';
+    }
+  });
+
+  registerForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('register-btn');
+    btn.disabled = true; btn.textContent = 'Registrando...';
+    try {
+      await auth.register(
+        document.getElementById('reg-nombre').value,
+        document.getElementById('reg-email').value,
+        document.getElementById('reg-pass').value
+      );
+      toast('Cuenta creada. Puedes iniciar sesión.', 'success');
+      registerForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Registrarse';
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Casa Monarca — Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="dashboard-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Casa <span>Monarca</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-tab="resumen">📊 Resumen</div>
+      <div class="nav-item" data-tab="borradores">📝 Borradores</div>
+      <div class="nav-item" data-tab="emitidos">✅ Emitidos</div>
+      <div class="nav-item" data-tab="revocados">🚫 Revocados</div>
+      <div class="nav-item" data-tab="llaves" id="nav-llaves">🔑 Mis Llaves</div>
+      <div class="nav-item" data-tab="usuarios" id="nav-usuarios">👥 Usuarios</div>
+      <div class="nav-item" data-tab="bitacora" id="nav-bitacora">📋 Bitácora</div>
+    </nav>
+    <div class="sidebar-user">
+      <strong id="user-nombre">Cargando...</strong>
+      <span id="user-rol" class="badge" style="margin-top:4px;"></span>
+      <br><br>
+      <button class="btn btn-ghost btn-sm" id="logout-btn">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- RESUMEN -->
+    <section class="tab-section active" id="tab-resumen">
+      <div class="page-header">
+        <h1 class="page-title">Resumen</h1>
+        <p class="page-subtitle">Estado general de documentos</p>
+      </div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="card">
+        <h3 style="margin-bottom:16px;">Documentos recientes</h3>
+        <div class="table-wrap" id="resumen-table"></div>
+      </div>
+    </section>
+
+    <!-- BORRADORES -->
+    <section class="tab-section" id="tab-borradores">
+      <div class="page-header flex gap-4" style="align-items:center;">
+        <div>
+          <h1 class="page-title">Borradores</h1>
+          <p class="page-subtitle">Crea, edita y emite documentos</p>
+        </div>
+        <button class="btn btn-primary ml-auto" id="btn-nuevo-doc">+ Nuevo documento</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap" id="borradores-table"></div>
+      </div>
+    </section>
+
+    <!-- EMITIDOS -->
+    <section class="tab-section" id="tab-emitidos">
+      <div class="page-header flex gap-4" style="align-items:center;">
+        <div>
+          <h1 class="page-title">Emitidos</h1>
+          <p class="page-subtitle">Documentos firmados digitalmente</p>
+        </div>
+        <input type="text" class="search-bar ml-auto" id="search-emitidos" placeholder="Buscar por folio o título..." />
+      </div>
+      <div class="card">
+        <div class="table-wrap" id="emitidos-table"></div>
+      </div>
+    </section>
+
+    <!-- REVOCADOS -->
+    <section class="tab-section" id="tab-revocados">
+      <div class="page-header">
+        <h1 class="page-title">Revocados</h1>
+        <p class="page-subtitle">Historial de documentos revocados</p>
+      </div>
+      <div class="card">
+        <div class="table-wrap" id="revocados-table"></div>
+      </div>
+    </section>
+
+    <!-- LLAVES -->
+    <section class="tab-section" id="tab-llaves">
+      <div class="page-header">
+        <h1 class="page-title">Mis Llaves RSA</h1>
+        <p class="page-subtitle">Gestión de llaves criptográficas</p>
+      </div>
+      <div class="card" id="llaves-info"></div>
+    </section>
+
+    <!-- USUARIOS (admin) -->
+    <section class="tab-section" id="tab-usuarios">
+      <div class="page-header">
+        <h1 class="page-title">Gestión de Usuarios</h1>
+        <p class="page-subtitle">Administra roles y accesos</p>
+      </div>
+      <div class="card">
+        <div class="table-wrap" id="usuarios-table"></div>
+      </div>
+    </section>
+
+    <!-- BITÁCORA -->
+    <section class="tab-section" id="tab-bitacora">
+      <div class="page-header">
+        <h1 class="page-title">Bitácora de Auditoría</h1>
+        <p class="page-subtitle">Registro completo de operaciones</p>
+      </div>
+      <div class="card">
+        <div class="table-wrap" id="bitacora-table"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL: Nuevo/Editar documento -->
+<div class="modal-overlay hidden" id="modal-doc">
+  <div class="modal">
+    <h3 class="modal-title" id="modal-doc-title">Nuevo documento</h3>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <input type="hidden" id="doc-id" />
+      <div class="form-group">
+        <label class="form-label">Título</label>
+        <input class="form-input" id="doc-titulo" placeholder="Título del documento" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input class="form-input" id="doc-desc" placeholder="Descripción breve" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contenido</label>
+        <textarea class="form-textarea" id="doc-contenido" rows="4" placeholder="Contenido del documento..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-doc-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="modal-doc-save">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmación genérica -->
+<div class="modal-overlay hidden" id="modal-confirm">
+  <div class="modal">
+    <h3 class="modal-title" id="modal-confirm-title">¿Confirmar?</h3>
+    <p id="modal-confirm-msg" class="text-muted"></p>
+    <div id="modal-confirm-extra" style="margin-top:12px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-confirm-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="modal-confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Llaves -->
+<div class="modal-overlay hidden" id="modal-token">
+  <div class="modal">
+    <h3 class="modal-title">Descargar llave privada</h3>
+    <p class="text-muted">Se generará un token temporal válido 10 minutos de un solo uso.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modal-token-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="modal-token-ok">Generar token y descargar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+import { auth, documentos, usuarios, claves, bitacora, toast, fmtDate, badgeEstado, badgeRol } from './js/api.js';
+
+let currentUser = null;
+let allDocs = [];
+
+// ─── INIT ───
+async function init() {
+  try {
+    const s = await auth.session();
+    currentUser = s.data.usuario;
+  } catch {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  document.getElementById('user-nombre').textContent = currentUser.nombre;
+  document.getElementById('user-rol').innerHTML = badgeRol(currentUser.rol);
+
+  // Ocultar tabs según rol
+  const isAdmin = currentUser.rol === 'administrador';
+  const isSuperOrAdmin = ['administrador','supervisor'].includes(currentUser.rol);
+  if (!isSuperOrAdmin) {
+    document.getElementById('nav-llaves').classList.add('hidden');
+    document.getElementById('nav-bitacora').classList.add('hidden');
+  }
+  if (!isAdmin) {
+    document.getElementById('nav-usuarios').classList.add('hidden');
+  }
+
+  await loadDocs();
+  loadResumen();
+}
+
+// ─── NAVEGACIÓN ───
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    item.classList.add('active');
+    const tab = item.dataset.tab;
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (tab === 'borradores') renderBorradores();
+    if (tab === 'emitidos') renderEmitidos();
+    if (tab === 'revocados') renderRevocados();
+    if (tab === 'usuarios') loadUsuarios();
+    if (tab === 'bitacora') loadBitacora();
+    if (tab === 'llaves') loadLlaves();
+  });
+});
+
+// ─── LOGOUT ───
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await auth.logout().catch(() => {});
+  window.location.href = 'index.html';
+});
+
+// ─── DOCUMENTOS ───
+async function loadDocs() {
+  const res = await documentos.list();
+  allDocs = res.data.documentos || [];
+}
+
+function renderBorradores() {
+  const docs = allDocs.filter(d => d.estado === 'borrador');
+  const canEdit = ['administrador','emisor'].includes(currentUser.rol);
+  const canEmit = ['administrador','supervisor','emisor'].includes(currentUser.rol);
+  const canRevoke = ['administrador','supervisor'].includes(currentUser.rol);
+  const rows = docs.map(d => `
+    <tr>
+      <td>${d.folio}</td>
+      <td>${d.titulo}</td>
+      <td>${fmtDate(d.fecha_creacion)}</td>
+      <td>
+        ${canEdit ? `<button class="btn btn-ghost btn-sm" onclick="editDoc(${d.id})">Editar</button>` : ''}
+        ${canEmit ? `<button class="btn btn-success btn-sm" onclick="emitirDoc(${d.id})">Emitir</button>` : ''}
+        ${canEdit ? `<button class="btn btn-danger btn-sm" onclick="eliminarDoc(${d.id})">Eliminar</button>` : ''}
+      </td>
+    </tr>`).join('');
+  document.getElementById('borradores-table').innerHTML = `
+    <table><thead><tr><th>Folio</th><th>Título</th><th>Creado</th><th>Acciones</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:var(--ink-400)">Sin borradores</td></tr>'}</tbody></table>`;
+}
+
+function renderEmitidos(filter = '') {
+  let docs = allDocs.filter(d => d.estado === 'emitido');
+  if (filter) docs = docs.filter(d => d.folio.includes(filter) || d.titulo.toLowerCase().includes(filter.toLowerCase()));
+  const canRevoke = ['administrador','supervisor'].includes(currentUser.rol);
+  const rows = docs.map(d => `
+    <tr>
+      <td>${d.folio}</td>
+      <td>${d.titulo}</td>
+      <td>${fmtDate(d.fecha_emision)}</td>
+      <td>${d.creador_nombre || '—'}</td>
+      <td>
+        <a href="verificar.html?folio=${d.folio}" target="_blank" class="btn btn-ghost btn-sm">Ver</a>
+        ${canRevoke ? `<button class="btn btn-danger btn-sm" onclick="revocarDoc(${d.id})">Revocar</button>` : ''}
+      </td>
+    </tr>`).join('');
+  document.getElementById('emitidos-table').innerHTML = `
+    <table><thead><tr><th>Folio</th><th>Título</th><th>Emitido</th><th>Por</th><th>Acciones</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:var(--ink-400)">Sin documentos emitidos</td></tr>'}</tbody></table>`;
+}
+
+function renderRevocados() {
+  const docs = allDocs.filter(d => d.estado === 'revocado');
+  const rows = docs.map(d => `
+    <tr>
+      <td>${d.folio}</td>
+      <td>${d.titulo}</td>
+      <td>${fmtDate(d.fecha_revocacion)}</td>
+      <td>${d.motivo_revocacion || '—'}</td>
+    </tr>`).join('');
+  document.getElementById('revocados-table').innerHTML = `
+    <table><thead><tr><th>Folio</th><th>Título</th><th>Revocado</th><th>Motivo</th></tr></thead>
+    <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:var(--ink-400)">Sin revocados</td></tr>'}</tbody></table>`;
+}
+
+function loadResumen() {
+  const bor = allDocs.filter(d => d.estado === 'borrador').length;
+  const emi = allDocs.filter(d => d.estado === 'emitido').length;
+  const rev = allDocs.filter(d => d.estado === 'revocado').length;
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${allDocs.length}</div><div class="stat-label">Total documentos</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--ink-200)">${bor}</div><div class="stat-label">Borradores</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--success)">${emi}</div><div class="stat-label">Emitidos</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${rev}</div><div class="stat-label">Revocados</div></div>`;
+  const rows = allDocs.slice(0,8).map(d => `
+    <tr><td>${d.folio}</td><td>${d.titulo}</td><td>${badgeEstado(d.estado)}</td><td>${fmtDate(d.fecha_creacion)}</td></tr>`).join('');
+  document.getElementById('resumen-table').innerHTML = `
+    <table><thead><tr><th>Folio</th><th>Título</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// Búsqueda emitidos
+document.getElementById('search-emitidos')?.addEventListener('input', e => renderEmitidos(e.target.value));
+
+// ─── MODAL DOCUMENTO ───
+document.getElementById('btn-nuevo-doc').addEventListener('click', () => openDocModal());
+document.getElementById('modal-doc-cancel').addEventListener('click', () => document.getElementById('modal-doc').classList.add('hidden'));
+document.getElementById('modal-doc-save').addEventListener('click', saveDoc);
+
+function openDocModal(doc = null) {
+  document.getElementById('modal-doc-title').textContent = doc ? 'Editar documento' : 'Nuevo documento';
+  document.getElementById('doc-id').value = doc?.id || '';
+  document.getElementById('doc-titulo').value = doc?.titulo || '';
+  document.getElementById('doc-desc').value = doc?.descripcion || '';
+  document.getElementById('doc-contenido').value = doc?.contenido || '';
+  document.getElementById('modal-doc').classList.remove('hidden');
+}
+
+async function saveDoc() {
+  const id = document.getElementById('doc-id').value;
+  const data = {
+    titulo: document.getElementById('doc-titulo').value,
+    descripcion: document.getElementById('doc-desc').value,
+    contenido: document.getElementById('doc-contenido').value,
+  };
+  if (!data.titulo) { toast('El título es requerido', 'error'); return; }
+  try {
+    if (id) { await documentos.update({ ...data, id: parseInt(id) }); toast('Documento actualizado', 'success'); }
+    else    { await documentos.create(data); toast('Documento creado', 'success'); }
+    document.getElementById('modal-doc').classList.add('hidden');
+    await loadDocs(); renderBorradores();
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+window.editDoc = (id) => {
+  const doc = allDocs.find(d => d.id == id);
+  if (doc) openDocModal(doc);
+};
+
+window.emitirDoc = (id) => showConfirm('¿Emitir documento?', 'Esta acción firmará el documento digitalmente. No se puede deshacer.', async () => {
+  try {
+    await documentos.emitir(id);
+    toast('Documento emitido', 'success');
+    await loadDocs(); renderBorradores();
+  } catch (e) { toast(e.message, 'error'); }
+});
+
+window.eliminarDoc = (id) => showConfirm('¿Eliminar borrador?', 'Esta acción es permanente.', async () => {
+  try {
+    await documentos.delete(id);
+    toast('Documento eliminado', 'success');
+    await loadDocs(); renderBorradores();
+  } catch (e) { toast(e.message, 'error'); }
+});
+
+window.revocarDoc = (id) => {
+  document.getElementById('modal-confirm-extra').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Motivo de revocación</label>
+      <input class="form-input" id="motivo-input" placeholder="Motivo..." />
+    </div>`;
+  showConfirm('¿Revocar documento?', 'Ingresa el motivo de revocación:', async () => {
+    const motivo = document.getElementById('motivo-input')?.value;
+    if (!motivo) { toast('El motivo es requerido', 'error'); return; }
+    try {
+      await documentos.revocar(id, motivo);
+      toast('Documento revocado', 'success');
+      await loadDocs(); renderEmitidos();
+    } catch (e) { toast(e.message, 'error'); }
+  });
+};
+
+// ─── MODAL CONFIRMACIÓN ───
+let confirmCallback = null;
+function showConfirm(title, msg, cb) {
+  document.getElementById('modal-confirm-title').textContent = title;
+  document.getElementById('modal-confirm-msg').textContent = msg;
+  document.getElementById('modal-confirm-extra').innerHTML = '';
+  confirmCallback = cb;
+  document.getElementById('modal-confirm').classList.remove('hidden');
+}
+document.getElementById('modal-confirm-cancel').addEventListener('click', () => {
+  document.getElementById('modal-confirm').classList.add('hidden');
+});
+document.getElementById('modal-confirm-ok').addEventListener('click', async () => {
+  if (confirmCallback) await confirmCallback();
+  document.getElementById('modal-confirm').classList.add('hidden');
+});
+
+// ─── USUARIOS ───
+async function loadUsuarios() {
+  try {
+    const res = await usuarios.list();
+    const list = res.data.usuarios || [];
+    const rows = list.map(u => `
+      <tr>
+        <td>${u.nombre}</td>
+        <td>${u.email}</td>
+        <td>${badgeRol(u.rol)}</td>
+        <td><span class="badge ${u.activo ? 'badge-emitido' : 'badge-revocado'}">${u.activo ? 'Activo' : 'Inactivo'}</span></td>
+        <td>
+          <select class="form-select" style="width:140px;" onchange="cambiarRol(${u.id}, this.value)">
+            ${['administrador','supervisor','emisor','verificador','consultor'].map(r => `<option value="${r}" ${u.rol===r?'selected':''}>${r}</option>`).join('')}
+          </select>
+          ${u.activo && u.id !== currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="desactivarUser(${u.id})">Desactivar</button>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="generarClaves(${u.id})">Gen. llaves</button>
+        </td>
+      </tr>`).join('');
+    document.getElementById('usuarios-table').innerHTML = `
+      <table><thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center">Sin usuarios</td></tr>'}</tbody></table>`;
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+window.cambiarRol = async (uid, rol) => {
+  try { await usuarios.cambiarRol(uid, rol); toast('Rol actualizado', 'success'); }
+  catch (e) { toast(e.message, 'error'); }
+};
+window.desactivarUser = (uid) => showConfirm('¿Desactivar usuario?', 'El usuario perderá acceso al sistema.', async () => {
+  try { await usuarios.desactivar(uid); toast('Usuario desactivado', 'success'); loadUsuarios(); }
+  catch (e) { toast(e.message, 'error'); }
+});
+window.generarClaves = (uid) => showConfirm('¿Generar llaves RSA-3072?', 'Esto reemplazará las llaves actuales del usuario.', async () => {
+  try { await usuarios.generarClaves(uid); toast('Llaves generadas', 'success'); }
+  catch (e) { toast(e.message, 'error'); }
+});
+
+// ─── LLAVES ───
+async function loadLlaves() {
+  try {
+    const res = await claves.info();
+    const c = res.data.clave;
+    document.getElementById('llaves-info').innerHTML = `
+      <h3 style="margin-bottom:16px;">Mi llave RSA-3072</h3>
+      <table style="width:100%; font-size:13px;">
+        <tr><td class="text-muted" style="padding:6px 0; width:40%">Fingerprint</td><td style="font-family:monospace; font-size:11px;">${c.fingerprint}</td></tr>
+        <tr><td class="text-muted" style="padding:6px 0">Versión</td><td>${c.version}</td></tr>
+        <tr><td class="text-muted" style="padding:6px 0">Estado</td><td><span class="badge ${c.activo ? 'badge-emitido' : 'badge-revocado'}">${c.activo ? 'Activa' : 'Revocada'}</span></td></tr>
+        <tr><td class="text-muted" style="padding:6px 0">Generada</td><td>${fmtDate(c.created_at)}</td></tr>
+        <tr><td class="text-muted" style="padding:6px 0">Descargas</td><td>${c.download_count}</td></tr>
+        <tr><td class="text-muted" style="padding:6px 0">Última descarga</td><td>${fmtDate(c.last_downloaded_at)}</td></tr>
+      </table>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-primary" id="btn-dl-key">Descargar .key (privada)</button>
+        <button class="btn btn-ghost" id="btn-dl-cer">Descargar .cer (pública)</button>
+      </div>`;
+    document.getElementById('btn-dl-key').addEventListener('click', () => descargarLlave('key'));
+    document.getElementById('btn-dl-cer').addEventListener('click', () => descargarLlave('cer'));
+  } catch (e) {
+    document.getElementById('llaves-info').innerHTML = `<p class="text-muted">No tienes llaves generadas. Solicita al administrador.</p>`;
+  }
+}
+
+async function descargarLlave(tipo) {
+  try {
+    const res = await claves.generarToken(tipo);
+    const token = res.data.token;
+    const url = claves.descargarUrl(token, tipo);
+    const a = document.createElement('a');
+    a.href = url; a.click();
+    toast('Descarga iniciada', 'success');
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+// ─── BITÁCORA ───
+async function loadBitacora() {
+  try {
+    const res = await bitacora.list(100);
+    const list = res.data.registros || [];
+    const rows = list.map(r => `
+      <tr>
+        <td>${fmtDate(r.fecha)}</td>
+        <td>${r.usuario_nombre || '—'}</td>
+        <td>${r.accion}</td>
+        <td>${r.modulo}</td>
+        <td><span class="badge ${r.resultado === 'success' ? 'badge-emitido' : 'badge-revocado'}">${r.resultado}</span></td>
+        <td class="text-sm text-muted">${r.descripcion || '—'}</td>
+      </tr>`).join('');
+    document.getElementById('bitacora-table').innerHTML = `
+      <table><thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Módulo</th><th>Resultado</th><th>Descripción</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6" style="text-align:center">Sin registros</td></tr>'}</tbody></table>`;
+  } catch (e) { toast(e.message, 'error'); }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-casa_monarca}
+      DB_USER: ${DB_USER:-app_user}
+      DB_PASS: ${DB_PASS:-secure_password_123}
+      SESSION_LIFETIME: ${SESSION_LIFETIME:-3600}
+      CM_KEYS_DIR: /keys
+    volumes:
+      - keys_vol:/keys
+    restart: unless-stopped
+    networks:
+      - monarca_net
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-root_123}
+      MYSQL_DATABASE: ${DB_NAME:-casa_monarca}
+      MYSQL_USER: ${DB_USER:-app_user}
+      MYSQL_PASSWORD: ${DB_PASS:-secure_password_123}
+    volumes:
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/migration_001.sql:/docker-entrypoint-initdb.d/02-migration.sql
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${DB_ROOT_PASS:-root_123}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - monarca_net
+
+volumes:
+  db_data:
+  keys_vol:
+
+networks:
+  monarca_net:
+    driver: bridge
