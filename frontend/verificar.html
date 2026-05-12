@@ -1,81 +1,362 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Casa Monarca — Verificar documento</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casa Monarca — Verificación Pública</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #020617;
+      --surface: #0F172A;
+      --card:    #1E293B;
+      --border:  #334155;
+      --green:   #22C55E;
+      --green-d: #16A34A;
+      --text:    #F8FAFC;
+      --muted:   #94A3B8;
+      --ff-head: 'Fira Code', monospace;
+      --ff-body: 'Fira Sans', sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ff-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+    .brand-icon {
+      width: 40px; height: 40px;
+      background: var(--green);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .brand-icon svg { width: 22px; height: 22px; color: white; }
+    .brand-name { font-family: var(--ff-head); font-size: 1rem; font-weight: 600; letter-spacing: 0.05em; }
+    .brand-name span { color: var(--green); }
+
+    /* Main card */
+    .verify-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 640px;
+    }
+    .card-title {
+      font-family: var(--ff-head);
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .card-subtitle { color: var(--muted); font-size: 0.88rem; margin-bottom: 32px; }
+
+    /* Search row */
+    .search-row { display: flex; gap: 10px; }
+    .search-row input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: var(--text);
+      font-family: var(--ff-head);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-row input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    .search-row input::placeholder { color: #475569; font-family: var(--ff-body); }
+    .btn-verify {
+      background: var(--green);
+      color: #022c22;
+      border: none;
+      border-radius: 10px;
+      padding: 13px 22px;
+      font-family: var(--ff-body);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-verify:hover { background: var(--green-d); }
+    .btn-verify:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Result area */
+    #result { margin-top: 28px; }
+
+    /* Valid state */
+    .result-valid {
+      background: rgba(34,197,94,0.07);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .result-valid .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.4);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 20px;
+      font-family: var(--ff-head);
+      letter-spacing: 0.06em;
+    }
+
+    /* Invalid state */
+    .result-invalid {
+      background: rgba(239,68,68,0.07);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .result-invalid .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #FCA5A5;
+      margin-bottom: 16px;
+      font-family: var(--ff-head);
+      letter-spacing: 0.06em;
+    }
+    .result-invalid p { color: var(--muted); font-size: 0.9rem; }
+
+    /* Doc details grid */
+    .doc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 480px) { .doc-grid { grid-template-columns: 1fr; } }
+    .doc-field label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .doc-field .val {
+      font-size: 0.92rem;
+      color: var(--text);
+      font-family: var(--ff-head);
+      word-break: break-all;
+    }
+    .doc-field.full { grid-column: 1 / -1; }
+
+    /* Signature section */
+    .sig-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .sig-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .sig-hex {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: var(--ff-head);
+      font-size: 0.75rem;
+      color: var(--green);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    /* Loading */
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #022c22;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Back link */
+    .back-link {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .back-link a { color: var(--green); text-decoration: none; font-weight: 500; }
+    .back-link a:hover { text-decoration: underline; }
+
+    /* Notice */
+    .notice {
+      background: rgba(34,197,94,0.05);
+      border: 1px solid rgba(34,197,94,0.15);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 24px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .notice svg { flex-shrink: 0; color: var(--green); margin-top: 1px; }
+  </style>
 </head>
 <body>
-<div class="verify-page">
-  <div class="verify-card">
-    <div style="text-align:center; margin-bottom:28px;">
-      <div class="font-serif" style="font-size:28px; color:var(--white);">Casa Monarca</div>
-      <p class="text-muted" style="margin-top:8px;">Verificación pública de documentos</p>
-    </div>
 
-    <div class="form-group">
-      <label class="form-label">Folio del documento</label>
-      <div class="flex gap-2">
-        <input type="text" class="form-input" id="folio-input" placeholder="DOC-20260428-XXXXXX" />
-        <button class="btn btn-primary" id="verify-btn">Verificar</button>
-      </div>
-    </div>
+<div class="header">
+  <div class="brand-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  </div>
+  <div class="brand-name">Casa <span>Monarca</span></div>
+</div>
 
-    <div id="result" class="hidden"></div>
+<div class="verify-card">
+  <h1 class="card-title">Verificación de documentos</h1>
+  <p class="card-subtitle">Consulta pública — no requiere cuenta ni autenticación</p>
 
-    <p style="margin-top:24px; text-align:center;">
-      <a href="index.html" style="color:var(--accent); font-size:13px; text-decoration:none;">← Ir al sistema</a>
-    </p>
+  <div class="search-row">
+    <input type="text" id="folio-input" placeholder="DOC-20260428-XXXXXX" autocomplete="off" spellcheck="false">
+    <button class="btn-verify" id="verify-btn" onclick="verificar()">Verificar</button>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="notice">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <span>Las firmas digitales de esta plataforma utilizan <strong>ECDSA P-256</strong>. La verificación criptográfica se realiza en el servidor contra la clave pública registrada del emisor.</span>
   </div>
 </div>
 
-<div id="toast-container"></div>
+<p class="back-link"><a href="index.html">← Acceso institucional</a></p>
 
 <script type="module">
-  import { consulta, toast, fmtDate, badgeEstado } from './js/api.js';
+  import { api } from './js/api.js';
 
-  document.getElementById('verify-btn').addEventListener('click', async () => {
+  function fmt(dt) {
+    if (!dt) return '—';
+    return new Date(dt).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  window.verificar = async () => {
     const folio = document.getElementById('folio-input').value.trim();
-    if (!folio) { toast('Ingresa un folio', 'error'); return; }
-
+    const resultEl = document.getElementById('result');
     const btn = document.getElementById('verify-btn');
-    btn.disabled = true; btn.textContent = 'Verificando...';
+    if (!folio) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Verificando...';
+    resultEl.innerHTML = '';
 
     try {
-      const res = await consulta.verificar(folio);
-      const { documento: d, verificacion: v } = res.data;
-      const valid = v.firma_valida;
+      const res = await api.get(`/api/documentos-verificar.php?folio=${encodeURIComponent(folio)}`);
 
-      document.getElementById('result').innerHTML = `
-        <div class="verify-result ${valid ? 'valid' : 'invalid'}">
-          <div style="font-size:18px; font-weight:600; margin-bottom:12px; color:${valid ? 'var(--success)' : 'var(--danger)'}">
-            ${v.mensaje}
-          </div>
-          <table style="width:100%; font-size:13px;">
-            <tr><td class="text-muted" style="padding:4px 0; width:40%">Folio</td><td>${d.folio}</td></tr>
-            <tr><td class="text-muted" style="padding:4px 0">Título</td><td>${d.titulo}</td></tr>
-            <tr><td class="text-muted" style="padding:4px 0">Estado</td><td>${badgeEstado(d.estado)}</td></tr>
-            <tr><td class="text-muted" style="padding:4px 0">Creador</td><td>${d.creador}</td></tr>
-            <tr><td class="text-muted" style="padding:4px 0">Firmante</td><td>${d.firmante || '—'}</td></tr>
-            <tr><td class="text-muted" style="padding:4px 0">Emitido</td><td>${fmtDate(d.fecha_emision)}</td></tr>
-            ${d.fecha_revocacion ? `<tr><td class="text-muted" style="padding:4px 0">Revocado</td><td>${fmtDate(d.fecha_revocacion)}</td></tr>` : ''}
-            ${d.motivo_revocacion ? `<tr><td class="text-muted" style="padding:4px 0">Motivo</td><td>${d.motivo_revocacion}</td></tr>` : ''}
-          </table>
-        </div>`;
-      document.getElementById('result').classList.remove('hidden');
+      if (res.valido) {
+        const d = res.documento;
+        resultEl.innerHTML = `
+          <div class="result-valid">
+            <div class="status-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              FIRMA VÁLIDA
+            </div>
+            <div class="doc-grid">
+              <div class="doc-field">
+                <label>Folio</label>
+                <div class="val">${d.folio}</div>
+              </div>
+              <div class="doc-field">
+                <label>Estado</label>
+                <div class="val">${d.estado}</div>
+              </div>
+              <div class="doc-field">
+                <label>Emisor</label>
+                <div class="val">${d.emisor || '—'}</div>
+              </div>
+              <div class="doc-field">
+                <label>Fecha de emisión</label>
+                <div class="val">${fmt(d.fecha_emision)}</div>
+              </div>
+              <div class="doc-field full">
+                <label>Tipo de documento</label>
+                <div class="val">${d.tipo_documento || '—'}</div>
+              </div>
+              ${d.firma ? `
+              <div class="doc-field full sig-section">
+                <div class="sig-label">Firma ECDSA P-256 (hex)</div>
+                <div class="sig-hex">${d.firma}</div>
+              </div>` : ''}
+            </div>
+          </div>`;
+      } else {
+        resultEl.innerHTML = `
+          <div class="result-invalid">
+            <div class="status-badge">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              NO ENCONTRADO
+            </div>
+            <p>${res.mensaje || 'El folio ingresado no corresponde a ningún documento emitido.'}</p>
+          </div>`;
+      }
     } catch (err) {
-      toast(err.message, 'error');
+      resultEl.innerHTML = `
+        <div class="result-invalid">
+          <div class="status-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            ERROR
+          </div>
+          <p>${err.message || 'No se pudo conectar con el servidor.'}</p>
+        </div>`;
     } finally {
-      btn.disabled = false; btn.textContent = 'Verificar';
+      btn.disabled = false;
+      btn.textContent = 'Verificar';
     }
+  };
+
+  // Allow Enter key to trigger verification
+  document.getElementById('folio-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.verificar();
   });
 
-  // Soporte para ?folio=DOC-... en URL
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('folio')) {
-    document.getElementById('folio-input').value = params.get('folio');
-    document.getElementById('verify-btn').click();
+  // Pre-fill folio from URL param
+  const params = new URLSearchParams(location.search);
+  const folioPrefill = params.get('folio');
+  if (folioPrefill) {
+    document.getElementById('folio-input').value = folioPrefill;
+    window.verificar();
   }
 </script>
 </body>
