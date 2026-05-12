@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casa Monarca v2 - Pipeline de Autenticación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .pipeline-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pipeline-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .emoji {
+            font-size: 1.2em;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover {
+            background: #f0f1ff;
+            border-left-color: #764ba2;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid #764ba2;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            color: #856404;
+        }
+
+        .security-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .security-box strong {
+            color: #155724;
+        }
+
+        .danger-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .danger-box strong {
+            color: #721c24;
+        }
+
+        .state-diagram {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f0f1ff;
+            border-radius: 8px;
+        }
+
+        .state-box {
+            background: #667eea;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .state-box:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+
+        .state-box.active {
+            background: #764ba2;
+            box-shadow: 0 0 20px rgba(118, 75, 162, 0.5);
+        }
+
+        .arrow {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f8f9ff;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .comparison-item {
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .comparison-item.correct {
+            border-color: #28a745;
+            background: #f1f9f5;
+        }
+
+        .comparison-item.wrong {
+            border-color: #dc3545;
+            background: #fdf3f5;
+        }
+
+        .comparison-item h4 {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .comparison-item.correct h4 {
+            color: #155724;
+        }
+
+        .comparison-item.wrong h4 {
+            color: #721c24;
+        }
+
+        .comparison-item code {
+            background: #f5f5f5;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .section-title {
+                font-size: 1.3em;
+            }
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50px;
+            bottom: -30px;
+            width: 2px;
+            background: #667eea;
+        }
+
+        .timeline-item:last-child::before {
+            display: none;
+        }
+
+        .timeline-dot {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #667eea;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-content {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9ff;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .timeline-content h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .timeline-content p {
+            color: #666;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Casa Monarca v2: Pipeline de Autenticación</h1>
+
+        <!-- SETUP INICIAL -->
+        <div class="pipeline-section">
+            <div class="section-title">
+                <span class="emoji">🔑</span>
+                FASE 1: Setup Inicial - Generación de Llaves RSA-3072
+            </div>
+
+            <p style="color: #666; margin-bottom: 20px;">
+                Cuando un usuario se registra, el sistema genera un par de claves RSA-3072 de forma única y segura.
+            </p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Generar par RSA-3072</h4>
+                        <p><code>openssl_pkey_new(['private_key_bits' => 3072])</code></p>
+                        <p>Se generan dos claves complementarias: privada (secreta) y pública (compartible)</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Calcular fingerprint</h4>
+                        <p><code>fingerprint = SHA256(clave_publica)</code></p>
+                        <p>Identificador único de la clave pública para auditoría</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Encriptar clave privada</h4>
+                        <div class="security-box">
+                            <strong>AES-256-CBC + PBKDF2</strong>
+                            <p>Salt aleatorio (16 bytes) + IV aleatorio (16 bytes)</p>
+                            <p>Derivación: <code>PBKDF2(usuarioId + salt, 100k iteraciones)</code></p>
+                            <p>Resultado: <code>encrypted::salt</code> (almacenado en BD)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Almacenar en BD</h4>
+                        <table style="font-size: 0.9em;">
+                            <tr>
+                                <th>Campo</th>
+                                <th>Valor</th>
+                            </tr>
+                            <tr>
+                                <td>clave_privada_encriptada</td>
+                                <td>BLOB (AES-256-CBC encriptado)</td>
+                            </tr>
+                            <tr>
+                                <td>iv_encriptacion</td>
+                                <td>base64(IV)</td>
+                            </tr>
+                            <tr>
+                                <td>certificado_publico</td>
+                                <td>PEM sin encriptar (es pública)</td>
+                            </tr>
+                            <tr>
+                                <td>fingerprint</td>
+                                <td>SHA256(clave_publica)</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="key-insight">
+                ✨ La clave privada NUNCA sale del servidor en forma desencriptada. Solo se usa internamente cuando el usuario emite documentos.
+            </div>
+        </div>
+
+        <!-- CREAR DOCUMENTO -->
+        <div class="pipeline-section">
+            <div class="section-title">
+                <span class="emoji">📄</span>
+                FASE 2A: Crear Documento (Estado: BORRADOR)
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>POST /api/documentos-create.php</h4>
+                        <div class="code-block">
+{
+  "titulo": "Certificado de Participación",
+  "descripcion": "Certificado de participación en el hackathon",
+  "contenido": "Certifico que Juan López participó..."
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Generar folio único</h4>
+                        <p><code>folio = "DOC-" + fecha(Ymd) + "-" + hex_aleatorio(6)</code></p>
+                        <p>Ejemplo: <code>DOC-20260511-ABC123</code></p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Calcular hash SHA-256</h4>
+                        <p><code>hash_sha256 = SHA256(contenido)</code></p>
+                        <p style="color: #999; font-size: 0.9em;">Se usa para verificar que el contenido no ha sido alterado</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Insertar en BD</h4>
+                        <p><span class="highlight">Estado: BORRADOR</span></p>
+                        <p>El documento aún no está firmado</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EMITIR DOCUMENTO -->
+        <div class="pipeline-section">
+            <div class="section-title">
+                <span class="emoji">✍️</span>
+                FASE 3: Emitir Documento (BORRADOR → EMITIDO)
+            </div>
+
+            <p style="color: #666; margin-bottom: 20px;">
+                Este es el paso crítico donde se crea la firma digital RSA-3072.
+            </p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>PASO 1: Obtener documento de BD</h4>
+                        <div class="code-block">
+SELECT folio, contenido, estado
+FROM documentos
+WHERE id = ?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>PASO 2: Reconstituir mensaje a firmar</h4>
+                        <div class="danger-box">
+                            <strong>⚠️ CRÍTICO:</strong> El formato debe ser exactamente igual en emisión y verificación
+                        </div>
+                        <div class="code-block">
+contenidoFirmar = folio + "|" + contenido
+
+Ejemplo:
+"DOC-20260511-ABC123|Certifico que Juan López participó..."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>PASO 3: Desencriptar clave privada</h4>
+                        <div class="security-box">
+                            <strong>Desencriptación bajo demanda:</strong>
+                            <p>Solo cuando el usuario emite (está autenticado)</p>
+                            <p>1. Obtener: encrypted, IV, salt de BD</p>
+                            <p>2. Derivar: <code>clave = PBKDF2(usuarioId + salt, 100k)</code></p>
+                            <p>3. Desencriptar: <code>AES-256-CBC(encrypted, clave, IV)</code></p>
+                            <p>4. Resultado: Clave privada PEM en memoria (no persistida)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>PASO 4: Firmar con RSA-3072 + SHA-256</h4>
+                        <div class="code-block">
+openssl_sign(
+    contenidoFirmar,
+    $signature,
+    privateKey,
+    OPENSSL_ALGO_SHA256
+)
+
+firma = base64_encode($signature)
+                        </div>
+                        <p style="color: #666; font-size: 0.9em;">Tamaño aproximado: ~512 caracteres en base64</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>PASO 5: Actualizar documento</h4>
+                        <div class="code-block">
+UPDATE documentos SET
+    estado = "emitido",
+    firmado_por_usuario_id = usuario_id,
+    fecha_emision = NOW(),
+    firma = base64_encoded_signature
+WHERE id = ?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>PASO 6: Registrar en auditoría</h4>
+                        <p>Tabla <code>bitacora</code>: quién, qué, cuándo</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="state-diagram">
+                <div class="state-box">BORRADOR</div>
+                <div class="arrow">→</div>
+                <div class="state-box active">EMITIDO ✓</div>
+            </div>
+        </div>
+
+        <!-- VERIFICAR DOCUMENTO -->
+        <div class="pipeline-section">
+            <div class="section-title">
+                <span class="emoji">✅</span>
+                FASE 4: Verificar Documento (PÚBLICO, sin autenticación)
+            </div>
+
+            <p style="color: #666; margin-bottom: 20px;">
+                Cualquiera (incluso sin cuenta) puede verificar la validez de un documento usando su folio.
+            </p>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>GET /api/consulta_qr.php?token=DOC-20260511-ABC123</h4>
+                        <p><span class="highlight">Sin autenticación</span></p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Obtener documento de BD</h4>
+                        <div class="code-block">
+SELECT d.*, u.nombre as creador, f.nombre as firmante
+FROM documentos d
+JOIN usuarios u ON u.id = d.creado_por
+LEFT JOIN usuarios f ON f.id = d.firmado_por_usuario_id
+WHERE d.folio = ?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Validar que esté emitido</h4>
+                        <div class="comparison">
+                            <div class="comparison-item correct">
+                                <h4>✓ Puede verificar</h4>
+                                <p>estado = "emitido"</p>
+                                <p>firma ≠ NULL</p>
+                            </div>
+                            <div class="comparison-item wrong">
+                                <h4>✗ No puede verificar</h4>
+                                <p>estado = "borrador"</p>
+                                <p>estado = "revocado"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Obtener clave pública del firmante</h4>
+                        <div class="security-box">
+                            <strong>La clave pública NO está encriptada (es pública)</strong>
+                            <p><code>SELECT certificado_publico FROM usuario_claves WHERE usuario_id = ?</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Reconstituir mensaje original</h4>
+                        <div class="danger-box">
+                            <strong>⚠️ DEBE ser EXACTAMENTE igual al que se firmó:</strong>
+                        </div>
+                        <div class="code-block">
+contenidoFirmar = folio + "|" + contenido
+
+"DOC-20260511-ABC123|Certifico que Juan López participó..."
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Verificar firma (RSA-3072 + SHA-256)</h4>
+                        <div class="code-block">
+openssl_verify(
+    contenidoFirmar,
+    base64_decode(firma_de_bd),
+    publicKey,
+    OPENSSL_ALGO_SHA256
+)
+
+Resultado:
+1  = Firma válida ✓
+0  = Firma inválida ✗
+-1 = Error en verificación
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h4>Devolver respuesta</h4>
+                        <div class="code-block">
+{
+  "documento": {
+    "folio": "DOC-20260511-ABC123",
+    "titulo": "Certificado",
+    "estado": "emitido",
+    "creador": "Juan López",
+    "firmante": "Juan López",
+    "fecha_emision": "2026-05-11 10:32:00"
+  },
+  "verificacion": {
+    "firma_valida": true,
+    "mensaje": "Firma digital válida ✓"
+  }
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="key-insight">
+                🌐 Este endpoint es público y puede ser llamado desde un navegador, una app móvil, o incluso un código QR. No requiere credenciales.
+            </div>
+        </div>
+
+        <!-- REVOCAR DOCUMENTO -->
+        <div class="pipeline-section">
+            <div class="section-title">
+                <span class="emoji">🚫</span>
+                FASE 5: Revocar Documento (EMITIDO → REVOCADO)
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>POST /api/documentos-revocar.php/{docId}</h3>
+                    <p>Solo usuarios autenticados pueden revocar sus propios documentos</p>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Validar documento</h3>
+                    <p>Debe existir y estar en estado "emitido"</p>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Actualizar estado</h3>
+                    <div class="code-block">
+UPDATE documentos SET
+    estado = "revocado",
+    fecha_revocacion = NOW(),
+    motivo_revocacion = "Documento emitido por error"
+WHERE id = ?
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Resultado en verificación pública</h3>
+                    <p>Cuando alguien intenta verificar un documento revocado:</p>
+                    <div class="code-block">
+{
+  "documento": {
+    ...
+    "estado": "revocado",
+    "fecha_revocacion": "2026-05-11 10:35:00",
+    "motivo_revocacion": "Documento emitido por error"
+  }
+}
+                    </div>
+                </div>
+            </div>
+
+            <div class="security-box">
+                <strong>Auditoría completa:</strong> La firma no se elimina, se mantiene para auditoría. Es rastreable por qué fue revocado.
+            </div>
+
+            <div class="state-diagram">
+                <div class="state-box">EMITIDO</div>
+                <div class="arrow">→</div>
+                <div class="state-box" style="background: #dc3545;">REVOCADO</div>
+            </div>
+        </div>
+
+        <!-- TABLA DE SEGURIDAD -->
+        <div class="pipeline-section">
+            <div class="section-title">
+                <span class="emoji">🔒</span>
+                Mecanismos de Seguridad
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Punto</th>
+                            <th>Mecanismo</th>
+                            <th>Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Clave privada</strong></td>
+                            <td>AES-256-CBC + PBKDF2</td>
+                            <td>100k iteraciones, salt aleatorio, IV aleatorio</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Contraseña usuario</strong></td>
+                            <td>bcrypt</td>
+                            <td>cost = 10</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Firma documento</strong></td>
+                            <td>RSA-3072 + SHA-256</td>
+                            <td>Cumple estándares NIST</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Hash contenido</strong></td>
+                            <td>SHA-256</td>
+                            <td>Detecta alteraciones</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Descarga claves</strong></td>
+                            <td>Token single-use</td>
+                            <td>SHA-256, TTL 10 min, marcado como usado</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Auditoría</strong></td>
+                            <td>Tabla bitácora</td>
+                            <td>Todos los eventos registrados (usuario, acción, timestamp)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Queries BD</strong></td>
+                            <td>Prepared statements</td>
+                            <td>Previene SQL injection</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HTTP headers</strong></td>
+                            <td>Security headers</td>
+                            <td>CSRF, XSS, clickjacking</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sesión usuario</strong></td>
+                            <td>HttpOnly cookie</td>
+                            <td>Server-side, no accesible desde JS</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RESUMEN -->
+        <div class="pipeline-section">
+            <div class="section-title">
+                <span class="emoji">📊</span>
+                Flujo Completo Resumido
+            </div>
+
+            <div class="key-insight" style="margin-bottom: 20px;">
+                <strong>El flujo completo de un documento:</strong>
+                <br><br>
+                1️⃣ <strong>SETUP:</strong> Usuario se registra → RSA-3072 generado y encriptado en BD
+                <br><br>
+                2️⃣ <strong>CREAR:</strong> Documento en estado BORRADOR, sin firma
+                <br><br>
+                3️⃣ <strong>EMITIR:</strong> Clave privada desencriptada → Firma RSA-3072+SHA256 → Guardada en BD
+                <br><br>
+                4️⃣ <strong>VERIFICAR:</strong> Público, sin auth → Obtiene folio → Obtiene clave pública → Verifica firma
+                <br><br>
+                5️⃣ <strong>REVOCAR:</strong> Marca como revocado → Se mantiene para auditoría → La verificación pública lo muestra
+            </div>
+
+            <div style="background: #f0f1ff; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea;">
+                <h3 style="color: #667eea; margin-bottom: 15px;">Puntos Críticos:</h3>
+                <ul style="list-style: none; color: #333; line-height: 2;">
+                    <li>✅ <span class="highlight">Formato de firma:</span> <code>folio + "|" + contenido</code> debe ser idéntico en emisión y verificación</li>
+                    <li>✅ <span class="highlight">Clave privada:</span> Solo en memoria durante emisión, nunca en tránsito desencriptada</li>
+                    <li>✅ <span class="highlight">Verificación pública:</span> No requiere autenticación, pero verifica criptográficamente</li>
+                    <li>✅ <span class="highlight">Auditoría:</span> Cada acción registrada (creación, emisión, revocación, verificación)</li>
+                    <li>✅ <span class="highlight">Revocación:</span> No elimina el registro, lo marca para trazabilidad</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
