@@ -10,13 +10,18 @@ export async function apiFetch(path, options = {}) {
     credentials: 'include',
     ...options,
   });
-  if (res.headers.get('content-type')?.includes('application/json')) {
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Error en la solicitud');
-    return data;
+  const text = await res.text();
+  let data = null;
+  if (text) {
+    try { data = JSON.parse(text); } catch {
+      console.error(`apiFetch: respuesta no-JSON de ${path}`, { status: res.status, body: text.slice(0, 300) });
+      if (!res.ok) throw new Error(`El servidor respondió ${res.status} con un mensaje no esperado (ver consola).`);
+      // 2xx con body no-JSON: devolver respuesta cruda
+      return res;
+    }
   }
-  if (!res.ok) throw new Error('Error en la solicitud');
-  return res;
+  if (!res.ok) throw new Error(data?.message || `Error en la solicitud (${res.status})`);
+  return data ?? res;
 }
 
 // AUTH
@@ -37,6 +42,9 @@ export const documentos = {
   revocar: (id, motivo) => apiFetch('/api/documentos-revocar.php', { method: 'POST', body: JSON.stringify({ id, motivo }) }),
   solicitarFirma: (id) => apiFetch('/api/documentos-solicitar-firma.php', { method: 'POST', body: JSON.stringify({ id }) }),
   completarFirma: (id, firma) => apiFetch('/api/documentos-completar-firma.php', { method: 'POST', body: JSON.stringify({ id, firma }) }),
+  firmantes: (id) => apiFetch(`/api/documentos-firmantes-list.php?id=${id}`),
+  asignarFirmantes: (id, firmantes) => apiFetch('/api/documentos-firmantes-asignar.php', { method: 'POST', body: JSON.stringify({ id, firmantes }) }),
+  firmables: () => apiFetch('/api/usuarios-firmables.php'),
 };
 
 // CLAVES BIP39

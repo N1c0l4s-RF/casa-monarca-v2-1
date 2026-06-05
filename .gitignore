@@ -1,5 +1,8 @@
 .env
 .env.local
+
+# Copia anidada del proyecto v2 viejo — no subir
+casa-monarca-v2/
 .DS_Store
 *.log
 /keys/*

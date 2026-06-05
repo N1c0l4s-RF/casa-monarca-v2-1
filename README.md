@@ -7,7 +7,7 @@ Plataforma institucional de gestión segura de documentos digitales con firmas R
 - **Backend**: PHP 8.2 + Apache 2.4
 - **Base de datos**: MySQL 8.0
 - **Frontend**: HTML5 + CSS3 + Vanilla JS (ES6 modules)
-- **Criptografía**: RSA-3072, AES-256-CBC, PBKDF2, SHA-256
+- **Criptografía**: ECDSA P-256 (firmas client-side), SHA-256, BIP39 mnemonics
 - **Deploy**: Docker Compose
 
 ## Inicio rápido
@@ -25,7 +25,7 @@ cp .env.example .env
 docker-compose up -d
 
 # 4. Abrir en el navegador
-open http://localhost:8080
+open http://localhost:8081
 ```
 
 ## Credenciales por defecto
@@ -98,8 +98,20 @@ docker exec web php -v        # Verificar PHP
 Los documentos emitidos pueden verificarse sin autenticación:
 
 ```
-http://localhost:8080/verificar.html?folio=DOC-20260428-XXXXXX
+http://localhost:8081/verificar.html?folio=DOC-20260428-XXXXXX
 ```
+
+## Firmas múltiples (multi-firma)
+
+Un documento puede requerir N firmas en orden estricto. Se configura al crearlo:
+
+1. En "Nuevo documento" activa el toggle **"Requiere múltiples firmas en orden"**
+2. Añade los firmantes en el orden deseado (chips numerados con flechas para reordenar)
+3. Cada firmante solo puede firmar cuando le toca su turno; el doc queda en estado `en_firma`
+4. Al completar la última firma, el doc pasa a `emitido`
+5. La verificación pública valida toda la cadena en orden
+
+**Excepción**: si el creador es administrador, se auto-añade como firmante final.
 
 ## Próximas fases
 

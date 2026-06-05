@@ -40,25 +40,41 @@ function crearDocumento(int $usuarioId, array $data): int {
 function listarDocumentos(int $usuarioId, string $rol): array {
     $pdo = getDB();
 
+    $cols = '
+        d.*, u.nombre as creador_nombre, f.nombre as firmado_por_nombre,
+        (SELECT COUNT(*) FROM documento_firmantes df WHERE df.documento_id = d.id) AS total_firmantes,
+        (SELECT COUNT(*) FROM documento_firmantes df WHERE df.documento_id = d.id AND df.estado = "firmado") AS firmas_completadas,
+        (SELECT df.usuario_id FROM documento_firmantes df
+            WHERE df.documento_id = d.id AND df.estado = "pendiente"
+            ORDER BY df.orden ASC LIMIT 1) AS siguiente_usuario_id,
+        (SELECT u2.nombre FROM documento_firmantes df
+            JOIN usuarios u2 ON u2.id = df.usuario_id
+            WHERE df.documento_id = d.id AND df.estado = "pendiente"
+            ORDER BY df.orden ASC LIMIT 1) AS siguiente_usuario_nombre
+    ';
+
     if (in_array($rol, ['administrador', 'supervisor', 'verificador'], true)) {
-        $stmt = $pdo->prepare('
-            SELECT d.*, u.nombre as creador_nombre, f.nombre as firmado_por_nombre
+        $stmt = $pdo->prepare("
+            SELECT $cols
             FROM documentos d
             JOIN usuarios u ON u.id = d.creado_por
             LEFT JOIN usuarios f ON f.id = d.firmado_por_usuario_id
             ORDER BY d.fecha_creacion DESC
-        ');
+        ");
         $stmt->execute();
     } else {
-        $stmt = $pdo->prepare('
-            SELECT d.*, u.nombre as creador_nombre, f.nombre as firmado_por_nombre
+        $stmt = $pdo->prepare("
+            SELECT $cols
             FROM documentos d
             JOIN usuarios u ON u.id = d.creado_por
             LEFT JOIN usuarios f ON f.id = d.firmado_por_usuario_id
-            WHERE d.creado_por = ? OR d.firmado_por_usuario_id = ?
+            WHERE d.creado_por = ?
+               OR d.firmado_por_usuario_id = ?
+               OR EXISTS (SELECT 1 FROM documento_firmantes df
+                            WHERE df.documento_id = d.id AND df.usuario_id = ?)
             ORDER BY d.fecha_creacion DESC
-        ');
-        $stmt->execute([$usuarioId, $usuarioId]);
+        ");
+        $stmt->execute([$usuarioId, $usuarioId, $usuarioId]);
     }
 
     return $stmt->fetchAll();

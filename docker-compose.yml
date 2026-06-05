@@ -4,7 +4,7 @@ services:
   web:
     build: .
     ports:
-      - "8080:80"
+      - "8081:80"
     depends_on:
       db:
         condition: service_healthy
@@ -19,6 +19,7 @@ services:
       CM_KEYS_DIR: /keys
     volumes:
       - keys_vol:/keys
+      - uploads_vol:/var/uploads
     restart: unless-stopped
     networks:
       - monarca_net
@@ -34,6 +35,9 @@ services:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./database/migration_001.sql:/docker-entrypoint-initdb.d/02-migration.sql
       - ./database/migration_002.sql:/docker-entrypoint-initdb.d/03-migration.sql
+      - ./database/migration_003.sql:/docker-entrypoint-initdb.d/04-migration.sql
+      - ./database/migration_004_drop_usuarios_pendientes.sql:/docker-entrypoint-initdb.d/05-migration.sql
+      - ./database/migration_005_firmas_multiples.sql:/docker-entrypoint-initdb.d/06-migration.sql
       - db_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "--password=${DB_ROOT_PASS:-root_123}"]
@@ -47,6 +51,7 @@ services:
 volumes:
   db_data:
   keys_vol:
+  uploads_vol:
 
 networks:
   monarca_net:

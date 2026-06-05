@@ -23,8 +23,15 @@ async function apiFetch(path, options = {}) {
     credentials: 'include',
     ...options,
   });
-  const data = res.headers.get('content-type')?.includes('application/json') ? await res.json() : null;
-  if (!res.ok) throw new Error(data?.message || 'Error en la solicitud');
+  const text = await res.text();
+  let data = null;
+  if (text) {
+    try { data = JSON.parse(text); } catch {
+      console.error(`apiFetch (keymanager): respuesta no-JSON de ${path}`, { status: res.status, body: text.slice(0, 300) });
+      throw new Error(`El servidor respondió ${res.status} con un mensaje no esperado al ${options.method === 'POST' ? 'firmar' : 'consultar'}. Revisa la consola.`);
+    }
+  }
+  if (!res.ok) throw new Error(data?.message || `Error en la solicitud (${res.status})`);
   return data;
 }
 

@@ -137,3 +137,47 @@ function verificarFirma(string $contenido, string $signatureB64, string $publicP
     $result    = openssl_verify($contenido, $signature, $publicKey, OPENSSL_ALGO_SHA256);
     return $result === 1;
 }
+
+// ── Verificación ECDSA P-256 (firmas client-side, formato hex) ───────────
+function verificarFirmaECDSA(string $data, string $firmaHex, string $publicKeyHex): bool {
+    $firmaBytes  = @hex2bin(strtolower($firmaHex));
+    $pubKeyBytes = @hex2bin(strtolower($publicKeyHex));
+    if (!$firmaBytes || !$pubKeyBytes) return false;
+
+    $pubKeyPem = _rawP256ToPem($pubKeyBytes);
+    if (!$pubKeyPem) return false;
+    $firmaDer = _compactToDer($firmaBytes);
+    if (!$firmaDer) return false;
+
+    $key = openssl_pkey_get_public($pubKeyPem);
+    if (!$key) return false;
+    return openssl_verify($data, $firmaDer, $key, OPENSSL_ALGO_SHA256) === 1;
+}
+
+function _rawP256ToPem(string $rawKey): ?string {
+    $len = strlen($rawKey);
+    if ($len === 33) {
+        $derPrefix = hex2bin('3039' . '3013' . '0607' . '2a8648ce3d0201'
+            . '0608' . '2a8648ce3d030107' . '0322' . '00');
+    } elseif ($len === 65) {
+        $derPrefix = hex2bin('3059' . '3013' . '0607' . '2a8648ce3d0201'
+            . '0608' . '2a8648ce3d030107' . '0342' . '00');
+    } else {
+        return null;
+    }
+    return "-----BEGIN PUBLIC KEY-----\n"
+         . chunk_split(base64_encode($derPrefix . $rawKey), 64, "\n")
+         . "-----END PUBLIC KEY-----\n";
+}
+
+function _compactToDer(string $compact): ?string {
+    if (strlen($compact) !== 64) return null;
+    $r = substr($compact, 0, 32);
+    $s = substr($compact, 32, 32);
+    if (ord($r[0]) & 0x80) $r = "\x00" . $r;
+    if (ord($s[0]) & 0x80) $s = "\x00" . $s;
+    $rLen = strlen($r); $sLen = strlen($s);
+    return chr(0x30) . chr(4 + $rLen + $sLen)
+         . chr(0x02) . chr($rLen) . $r
+         . chr(0x02) . chr($sLen) . $s;
+}

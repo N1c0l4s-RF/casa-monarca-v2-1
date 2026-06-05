@@ -6,6 +6,8 @@
  */
 require_once __DIR__ . '/../auth/middleware.php';
 require_once __DIR__ . '/../modules/bitacora.php';
+require_once __DIR__ . '/../modules/firmantes.php';
+require_once __DIR__ . '/../modules/claves.php';
 
 setSecurityHeaders();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') jsonError('Método no permitido', 405);
@@ -46,17 +48,46 @@ $pdo->prepare('UPDATE firma_sessions SET usado_en = NOW() WHERE id = ?')
     ->execute([$session['id']]);
 
 // ── Obtener documento y reconstruir contenido a firmar ────────────────────
-$stmt = $pdo->prepare('SELECT id, folio, contenido, estado FROM documentos WHERE id = ?');
+$stmt = $pdo->prepare('SELECT id, folio, contenido, estado, creado_por, ruta_archivo, hash_sha256 FROM documentos WHERE id = ?');
 $stmt->execute([$docId]);
 $doc = $stmt->fetch();
 
-if (!$doc)                         jsonError('Documento no encontrado', 404);
-if ($doc['estado'] !== 'borrador') jsonError('Solo se pueden emitir borradores', 400);
-if ((int)$doc['creado_por'] === (int)$user['id'] && $user['rol'] !== 'administrador') {
-    jsonError('No puedes firmar tu propio documento. Se requiere un firmante diferente al creador.', 403);
+if (!$doc) jsonError('Documento no encontrado', 404);
+
+// Verificar integridad del PDF antes de firmar
+if (!empty($doc['ruta_archivo']) && !empty($doc['hash_sha256'])) {
+    if (!is_readable($doc['ruta_archivo'])) {
+        jsonError('Archivo PDF no encontrado en el servidor', 500);
+    }
+    $hashActual = hash_file('sha256', $doc['ruta_archivo']);
+    if ($hashActual !== $doc['hash_sha256']) {
+        jsonError('El archivo PDF fue modificado después de su subida. Por integridad, no se puede firmar.', 422);
+    }
 }
 
-$contenidoAFirmar = $doc['folio'] . '|' . $doc['contenido'];
+$multifirma = tieneFirmantes((int)$doc['id']);
+$ordenActual = 1;
+$firmanteRow = null;
+
+if ($multifirma) {
+    if ($doc['estado'] !== 'en_firma') jsonError('El documento no está en proceso de firma', 400);
+    $firmanteRow = obtenerFirmanteActual((int)$doc['id']);
+    if (!$firmanteRow) jsonError('No quedan firmas pendientes', 400);
+    if ((int)$firmanteRow['usuario_id'] !== (int)$user['id']) {
+        jsonError('No es tu turno de firmar', 403);
+    }
+    $ordenActual = (int)$firmanteRow['orden'];
+    $firmaPrevia = obtenerFirmaPrevia((int)$doc['id'], $ordenActual);
+    $contenidoAFirmar = construirContenidoAFirmar($doc, $ordenActual, $firmaPrevia);
+} else {
+    if ($doc['estado'] !== 'borrador') jsonError('Solo se pueden emitir borradores', 400);
+    if ((int)$doc['creado_por'] === (int)$user['id'] && $user['rol'] !== 'administrador') {
+        jsonError('No puedes firmar tu propio documento. Se requiere un firmante diferente al creador.', 403);
+    }
+    $contenidoAFirmar = !empty($doc['ruta_archivo']) && !empty($doc['hash_sha256'])
+        ? $doc['folio'] . '|' . $doc['hash_sha256']
+        : $doc['folio'] . '|' . ($doc['contenido'] ?? '');
+}
 
 // Validar que el hash en DB corresponde al documento actual
 if (hash('sha256', $contenidoAFirmar) !== $hashHex) {
@@ -71,13 +102,8 @@ if (!$claveRow) jsonError('No tienes una clave pública registrada.', 422);
 
 $publicKeyHex = $claveRow['certificado_publico'];
 
-// ── Verificar firma ECDSA P-256 con OpenSSL ───────────────────────────────
-$firmaBytes  = hex2bin(strtolower($firma));
-$pubKeyBytes = hex2bin(strtolower($publicKeyHex));
-
-// openssl_verify con OPENSSL_ALGO_SHA256 hashea $data internamente.
-// El browser firmó SHA256(contenidoAFirmar), así que pasamos el contenido original.
-$firmaValida = verificarECDSA($contenidoAFirmar, $firmaBytes, $pubKeyBytes);
+// Verificar firma ECDSA P-256 (helper en modules/claves.php)
+$firmaValida = verificarFirmaECDSA($contenidoAFirmar, $firma, $publicKeyHex);
 
 if (!$firmaValida) {
     registrarBitacora($user['id'], 'firma_invalida', 'documentos', $docId, null,
@@ -85,66 +111,58 @@ if (!$firmaValida) {
     jsonError('Firma inválida. La firma no corresponde a tu clave pública.', 422);
 }
 
-// ── Emitir documento ──────────────────────────────────────────────────────
-$pdo->prepare('
-    UPDATE documentos SET
-        estado = "emitido",
-        firmado_por_usuario_id = ?,
-        fecha_emision = NOW(),
-        firma = ?
-    WHERE id = ?
-')->execute([$user['id'], strtolower($firma), $docId]);
+// ── Persistir firma ───────────────────────────────────────────────────────
+$firmaHex = strtolower($firma);
 
-registrarBitacora($user['id'], 'emitted', 'documentos', $docId, $doc['folio'],
-    'Documento emitido con firma ECDSA P-256 client-side');
+if ($multifirma) {
+    // Marcar la fila del firmante actual como firmada
+    $pdo->prepare('
+        UPDATE documento_firmantes
+        SET estado = "firmado", firma = ?, hash_firmado = ?, fecha_firma = NOW()
+        WHERE id = ?
+    ')->execute([$firmaHex, $hashHex, $firmanteRow['id']]);
 
-jsonSuccess('Documento emitido y firmado correctamente', [
-    'folio'     => $doc['folio'],
-    'algoritmo' => 'ECDSA P-256',
-]);
-
-// ── Funciones de verificación ECDSA P-256 ────────────────────────────────
-function verificarECDSA(string $data, string $firma, string $publicKey): bool {
-    $pubKeyPem = rawPublicKeyToPem($publicKey);
-    if (!$pubKeyPem) return false;
-    $firmaDer = compactToDer($firma);
-    if (!$firmaDer) return false;
-    $key = openssl_pkey_get_public($pubKeyPem);
-    if (!$key) return false;
-    return openssl_verify($data, $firmaDer, $key, OPENSSL_ALGO_SHA256) === 1;
-}
-
-function rawPublicKeyToPem(string $rawKey): ?string {
-    $len = strlen($rawKey);
-    if ($len === 33) {
-        // Compressed P-256: SEQUENCE(57) = algoSeq(21) + BITSTRING(34+2)
-        $derPrefix = hex2bin('3039' . '3013'
-            . '0607' . '2a8648ce3d0201'
-            . '0608' . '2a8648ce3d030107'
-            . '0322' . '00');
-    } elseif ($len === 65) {
-        // Uncompressed P-256: SEQUENCE(89) = algoSeq(21) + BITSTRING(66+2)
-        $derPrefix = hex2bin('3059' . '3013'
-            . '0607' . '2a8648ce3d0201'
-            . '0608' . '2a8648ce3d030107'
-            . '0342' . '00');
+    // Si ya no quedan pendientes, emitir el documento
+    $quedaPendiente = obtenerFirmanteActual($docId);
+    if (!$quedaPendiente) {
+        $pdo->prepare('
+            UPDATE documentos SET
+                estado = "emitido",
+                firmado_por_usuario_id = ?,
+                fecha_emision = NOW(),
+                firma = ?
+            WHERE id = ?
+        ')->execute([$user['id'], $firmaHex, $docId]);
+        registrarBitacora($user['id'], 'emitted', 'documentos', $docId, $doc['folio'],
+            "Documento emitido. Firma final (orden {$ordenActual}) completó la cadena.");
+        jsonSuccess('Última firma registrada. Documento emitido.', [
+            'folio' => $doc['folio'], 'orden' => $ordenActual, 'completado' => true,
+        ]);
     } else {
-        return null;
+        registrarBitacora($user['id'], 'firma_parcial', 'documentos', $docId, $doc['folio'],
+            "Firma del orden {$ordenActual} registrada. Pendiente: orden {$quedaPendiente['orden']}.");
+        jsonSuccess('Firma registrada. Aún faltan firmas.', [
+            'folio' => $doc['folio'], 'orden' => $ordenActual, 'completado' => false,
+            'siguiente_usuario_id' => (int)$quedaPendiente['usuario_id'],
+            'siguiente_orden'      => (int)$quedaPendiente['orden'],
+        ]);
     }
-    $der = $derPrefix . $rawKey;
-    return "-----BEGIN PUBLIC KEY-----\n"
-         . chunk_split(base64_encode($der), 64, "\n")
-         . "-----END PUBLIC KEY-----\n";
+} else {
+    $pdo->prepare('
+        UPDATE documentos SET
+            estado = "emitido",
+            firmado_por_usuario_id = ?,
+            fecha_emision = NOW(),
+            firma = ?
+        WHERE id = ?
+    ')->execute([$user['id'], $firmaHex, $docId]);
+
+    registrarBitacora($user['id'], 'emitted', 'documentos', $docId, $doc['folio'],
+        'Documento emitido con firma ECDSA P-256 client-side');
+
+    jsonSuccess('Documento emitido y firmado correctamente', [
+        'folio'     => $doc['folio'],
+        'algoritmo' => 'ECDSA P-256',
+    ]);
 }
 
-function compactToDer(string $compact): ?string {
-    if (strlen($compact) !== 64) return null;
-    $r = substr($compact, 0, 32);
-    $s = substr($compact, 32, 32);
-    if (ord($r[0]) & 0x80) $r = "\x00" . $r;
-    if (ord($s[0]) & 0x80) $s = "\x00" . $s;
-    $rLen = strlen($r); $sLen = strlen($s);
-    return chr(0x30) . chr(4 + $rLen + $sLen)
-         . chr(0x02) . chr($rLen) . $r
-         . chr(0x02) . chr($sLen) . $s;
-}

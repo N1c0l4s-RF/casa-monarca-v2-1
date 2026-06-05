@@ -16,6 +16,7 @@ $pdo  = getDB();
 $stmt = $pdo->prepare('
     SELECT d.folio, d.titulo, d.estado, d.fecha_emision, d.firma,
            d.creado_por, d.firmado_por_usuario_id,
+           d.ruta_archivo, d.hash_sha256,
            uc.nombre AS creador_nombre,
            uf.nombre AS firmante_nombre
     FROM documentos d
@@ -52,5 +53,7 @@ jsonSuccess('Documento verificado', [
         'fecha_emision'=> $doc['fecha_emision'],
         'firma'        => $doc['firma'],
         'algoritmo'    => 'ECDSA P-256',
+        'tiene_pdf'    => !empty($doc['ruta_archivo']),
+        'hash_sha256'  => $doc['hash_sha256'] ?: null,
     ],
 ]);

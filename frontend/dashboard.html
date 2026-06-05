@@ -4,27 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Casa Monarca — Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:      #020617;
-      --surface: #0F172A;
-      --card:    #1E293B;
-      --card2:   #273549;
-      --border:  #334155;
-      --green:   #22C55E;
-      --green-d: #16A34A;
-      --green-bg:#052e16;
-      --blue:    #3B82F6;
-      --amber:   #F59E0B;
-      --red:     #EF4444;
-      --red-bg:  #2d0a0a;
-      --text:    #F8FAFC;
-      --muted:   #94A3B8;
-      --muted2:  #64748B;
-      --ff-head: 'Fira Code', monospace;
-      --ff-body: 'Fira Sans', sans-serif;
+      /* ── Paleta Casa Monarca ── */
+      /* Brand: naranja monarca (#fd580b se usa 130× en el tema oficial de la org). */
+      --orange:    #fd580b;
+      --orange-d:  #e44b04;
+      --orange-bg: #fff1e8;
+      --amber-cm:  #fbb122;
+
+      /* Canvas claro y cálido */
+      --bg:        #faf6ef;
+      --surface:   #ffffff;
+      --card:      #ffffff;
+      --card2:     #fbf6ee;
+      --border:    #e5ddd2;
+      --border-2:  #efe7d8;
+
+      /* Aliases: el código ya usa --green/--green-d como "color de acción primaria"
+         (botones, nav activo, focus). Apuntan al naranja monarca para no tocar todos
+         los selectores. El verde real vive en --success (badges de doc emitido, etc.). */
+      --green:     var(--orange);
+      --green-d:   var(--orange-d);
+      --green-bg:  var(--orange-bg);
+
+      /* Estados semánticos */
+      --success:   #54b551;
+      --success-d: #3d9939;
+      --success-bg:#e8f5e8;
+      --blue:      #1976d2;
+      --amber:     #fbb122;
+      --amber-bg:  #fff4dc;
+      --red:       #d92626;
+      --red-bg:    #fce6e6;
+
+      /* Texto cálido (cafés en lugar de negros puros) */
+      --text:    #32251c;
+      --muted:   #6d635a;
+      --muted2:  #998d80;
+
+      /* Tipografía oficial Casa Monarca */
+      --ff-head: 'Montserrat', sans-serif;
+      --ff-body: 'Open Sans', sans-serif;
       --sidebar: 240px;
     }
 
@@ -90,11 +113,11 @@
       margin-bottom: 2px;
     }
 
-    .nav-item:hover { background: var(--card); color: var(--text); }
+    .nav-item:hover { background: var(--card2); color: var(--text); }
 
     .nav-item.active {
-      background: rgba(34,197,94,0.12);
-      color: var(--green);
+      background: rgba(253,88,11,0.10);
+      color: var(--orange);
       font-weight: 600;
     }
 
@@ -112,6 +135,34 @@
       text-align: center;
     }
 
+    /* ── Drop zone para subir PDF ── */
+    .drop-zone {
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 24px 18px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--surface);
+      transition: border-color .15s, background .15s;
+    }
+    .drop-zone:hover { border-color: var(--orange); background: rgba(253,88,11,0.05); }
+    .drop-zone.drag-over { border-color: var(--orange); background: rgba(253,88,11,0.10); border-style: solid; }
+    .drop-zone.has-file { padding: 14px 16px; text-align: left; }
+    .drop-zone.has-file #nd-drop-file { display: flex !important; align-items: center; gap: 12px; }
+
+    .tabs-mini {
+      display: flex; gap: 4px; padding: 0 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-mini {
+      background: transparent; border: none; color: var(--muted);
+      padding: 8px 14px; font-size: 0.84rem; cursor: pointer;
+      border-radius: 6px 6px 0 0; border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+    }
+    .tab-mini.active { color: var(--green); border-bottom-color: var(--green); }
+    .tab-mini:hover:not(.active) { color: var(--text); }
+
     .sidebar-user {
       padding: 14px 16px;
       border-top: 1px solid var(--border);
@@ -128,7 +179,7 @@
       font-family: var(--ff-head);
       font-size: 0.78rem;
       font-weight: 700;
-      color: #022c22;
+      color: #ffffff;
       flex-shrink: 0;
     }
 
@@ -182,7 +233,7 @@
     }
     .btn svg { width: 15px; height: 15px; }
 
-    .btn-primary { background: var(--green); color: #022c22; }
+    .btn-primary { background: var(--green); color: #ffffff; }
     .btn-primary:hover { background: var(--green-d); }
     .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
     .btn-secondary:hover { background: var(--card2); }
@@ -267,11 +318,11 @@
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      background: rgba(15,23,42,0.4);
+      background: var(--card2);
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }
-    tbody tr { border-bottom: 1px solid rgba(51,65,85,0.5); transition: background 0.12s; }
+    tbody tr { border-bottom: 1px solid var(--border-2); transition: background 0.12s; }
     tbody tr:last-child { border-bottom: none; }
     tbody tr:hover { background: rgba(30,41,59,0.6); }
     td { padding: 12px 20px; font-size: 0.85rem; vertical-align: middle; }
@@ -287,16 +338,76 @@
       font-weight: 700;
       letter-spacing: 0.02em;
     }
-    .badge-emitido { background: rgba(34,197,94,0.12); color: var(--green); }
-    .badge-borrador { background: rgba(245,158,11,0.12); color: var(--amber); }
-    .badge-revocado { background: rgba(239,68,68,0.12); color: var(--red); }
+    .badge-emitido { background: rgba(84,181,81,0.14); color: var(--success-d); }
+    .badge-borrador { background: rgba(251,177,34,0.18); color: #b07a07; }
+    .badge-revocado { background: rgba(217,38,38,0.12); color: var(--red); }
+    .badge-en_firma { background: rgba(59,130,246,0.14); color: var(--blue); }
+
+    /* ── Cadena de firmantes ── */
+    .firma-chain {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      flex-wrap: wrap;
+      padding: 6px 0;
+    }
+    .firma-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px 6px 8px;
+      font-size: 0.78rem;
+      color: var(--text);
+      min-height: 32px;
+    }
+    .firma-step.firmado { background: rgba(84,181,81,0.10); border-color: rgba(84,181,81,0.35); color: var(--success-d); }
+    .firma-step.actual  { background: rgba(253,88,11,0.10); border-color: rgba(253,88,11,0.45); color: var(--orange-d); font-weight: 600; }
+    .firma-step.pendiente { color: var(--muted); }
+    .firma-step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--card); border: 1px solid var(--border);
+      font-size: 0.72rem; font-weight: 700;
+    }
+    .firma-step.firmado .firma-step-num { background: var(--success-d); color: white; border-color: var(--success-d); }
+    .firma-step.actual  .firma-step-num { background: var(--orange); color: white; border-color: var(--orange); }
+    .firma-arrow {
+      display: inline-flex; align-items: center; padding: 0 4px;
+      color: var(--muted2); font-size: 0.85rem;
+    }
+
+    /* Selector de firmantes en modal nuevo doc */
+    .firmantes-builder {
+      display: flex; flex-direction: column; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px;
+    }
+    .firmantes-row { display: flex; gap: 8px; align-items: center; }
+    .firmantes-row select { flex: 1; }
+    .firmante-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 999px; padding: 4px 4px 4px 10px;
+      font-size: 0.8rem;
+    }
+    .firmante-chip .num { font-weight: 700; color: var(--orange); margin-right: 2px; }
+    .firmante-chip button {
+      background: transparent; border: none; cursor: pointer;
+      color: var(--muted); width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .firmante-chip button:hover { background: var(--border); color: var(--text); }
+    .firmante-chip svg { width: 12px; height: 12px; }
 
     .role-badge { background: rgba(59,130,246,0.12); color: var(--blue); }
-    .role-administrador { background: rgba(168,85,247,0.12); color: #C084FC; }
-    .role-supervisor { background: rgba(245,158,11,0.12); color: var(--amber); }
-    .role-emisor { background: rgba(34,197,94,0.12); color: var(--green); }
-    .role-verificador { background: rgba(59,130,246,0.12); color: var(--blue); }
-    .role-consultor { background: rgba(100,116,139,0.12); color: var(--muted); }
+    .role-administrador { background: rgba(168,85,247,0.14); color: #7c3aed; }
+    .role-supervisor { background: rgba(251,177,34,0.18); color: #b07a07; }
+    .role-emisor { background: rgba(253,88,11,0.12); color: var(--orange-d); }
+    .role-verificador { background: rgba(25,118,210,0.12); color: var(--blue); }
+    .role-consultor { background: rgba(109,99,90,0.12); color: var(--muted); }
 
     .actions-cell { display: flex; gap: 6px; align-items: center; }
 
@@ -313,7 +424,8 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(2,6,23,0.8);
+      background: rgba(50,37,28,0.55);
+      backdrop-filter: blur(2px);
       z-index: 50;
       align-items: center;
       justify-content: center;
@@ -394,13 +506,13 @@
       margin: 12px 0;
     }
     .alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
-    .alert-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: #FCD34D; }
-    .alert-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.25); color: #86EFAC; }
-    .alert-error   { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #FCA5A5; }
-    .alert-info    { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); color: #93C5FD; }
+    .alert-warning { background: rgba(251,177,34,0.12); border: 1px solid rgba(251,177,34,0.4); color: #8a5a05; }
+    .alert-success { background: rgba(84,181,81,0.12); border: 1px solid rgba(84,181,81,0.4); color: #2e6b2c; }
+    .alert-error   { background: rgba(217,38,38,0.10); border: 1px solid rgba(217,38,38,0.35); color: #9c1c1c; }
+    .alert-info    { background: rgba(25,118,210,0.10); border: 1px solid rgba(25,118,210,0.35); color: #134c8a; }
 
     /* ── BITÁCORA ── */
-    .log-row { display: flex; gap: 14px; padding: 12px 20px; border-bottom: 1px solid rgba(51,65,85,0.4); font-size: 0.83rem; }
+    .log-row { display: flex; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--border-2); font-size: 0.83rem; }
     .log-row:last-child { border-bottom: none; }
     .log-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
     .log-dot-success { background: var(--green); }
@@ -474,7 +586,7 @@
 
     .step-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
     .step-tab { flex: 1; padding: 9px; text-align: center; font-size: 0.8rem; font-weight: 600; cursor: pointer; background: transparent; border: none; color: var(--muted); transition: all 0.15s; }
-    .step-tab.active { background: var(--green); color: #022c22; }
+    .step-tab.active { background: var(--green); color: #ffffff; }
 
     .step-panel { display: none; }
     .step-panel.active { display: block; }
@@ -498,7 +610,7 @@
     }
     .mnemonic-input-cell:focus-within {
       border-color: var(--green);
-      box-shadow: 0 0 0 2px rgba(34,197,94,0.12);
+      box-shadow: 0 0 0 3px rgba(253,88,11,0.18);
     }
     .mnemonic-input-cell .mnemonic-num {
       font-family: var(--ff-head);
@@ -548,7 +660,7 @@
     }
     #loading.hidden { opacity: 0; pointer-events: none; }
     .loading-icon { width: 40px; height: 40px; background: var(--green); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-    .loading-icon svg { width: 24px; height: 24px; color: #022c22; }
+    .loading-icon svg { width: 24px; height: 24px; color: #ffffff; }
     #loading p { font-size: 0.82rem; color: var(--muted); font-family: var(--ff-head); }
 
     /* ── RESPONSIVE ── */
@@ -602,7 +714,7 @@
 
     <div class="nav-item" data-view="usuarios" id="nav-usuarios" style="display:none" onclick="switchView('usuarios')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Usuarios
+      <span style="flex:1">Usuarios</span>
     </div>
 
     <div class="nav-item" data-view="resumen" id="nav-resumen" style="display:none" onclick="switchView('resumen')">
@@ -725,9 +837,11 @@
 
     <!-- ── VIEW: USUARIOS ── -->
     <div class="view" id="view-usuarios">
+
+      <!-- Usuarios activos -->
       <div class="table-wrap">
         <div class="table-header">
-          <div class="table-title">Gestión de usuarios</div>
+          <div class="table-title">Usuarios activos</div>
           <button class="btn btn-primary btn-sm" onclick="openModalNuevoUsuario()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nuevo usuario
@@ -759,7 +873,7 @@
           <div class="resumen-value" id="rs-borradores">—</div>
           <div class="resumen-sub">Pendientes de firma</div>
         </div>
-        <div class="resumen-card" style="--rc-color:#EF4444">
+        <div class="resumen-card" style="--rc-color:#d92626">
           <div class="resumen-label">Firmas fallidas</div>
           <div class="resumen-value" id="rs-fallidas">—</div>
           <div class="resumen-sub" id="rs-fallidas-hoy"></div>
@@ -860,6 +974,10 @@
 
           <div id="key-gen-result" style="display:none;margin-top:16px">
             <div class="mnemonic-grid" id="key-mnemonic-grid"></div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-copiar-mnemonic" onclick="copiarMnemonic()" style="width:100%;margin:10px 0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:middle;margin-right:6px"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copiar las 12 palabras
+            </button>
             <div class="alert alert-warning">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               Escribe estas palabras en papel ahora. Si cierras la página sin anotarlas, se perderán.
@@ -922,15 +1040,55 @@
     <div class="modal-body">
       <div class="form-group">
         <label class="form-label">Título</label>
-        <input type="text" class="form-input" id="nd-titulo" placeholder="Certificado de participación…">
+        <input type="text" class="form-input" id="nd-titulo" placeholder="Constancia de atención psicosocial — Familia X">
       </div>
       <div class="form-group">
-        <label class="form-label">Descripción</label>
-        <input type="text" class="form-input" id="nd-descripcion" placeholder="Breve descripción (opcional)">
+        <label class="form-label">Descripción / Notas internas</label>
+        <input type="text" class="form-input" id="nd-descripcion" placeholder="Breve contexto (opcional, no se firma)">
       </div>
       <div class="form-group">
-        <label class="form-label">Contenido del documento</label>
-        <textarea class="form-textarea" id="nd-contenido" placeholder="Texto completo del documento que será firmado…" style="min-height:140px"></textarea>
+        <label class="form-label">Archivo PDF a firmar</label>
+        <div id="nd-drop" class="drop-zone">
+          <input type="file" id="nd-archivo" accept="application/pdf,.pdf" style="display:none">
+          <div id="nd-drop-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:38px;height:38px;margin:0 auto 8px;display:block;color:var(--muted)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div style="font-size:0.92rem;font-weight:500">Arrastra el PDF aquí o haz clic para seleccionar</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:4px">Máximo 25 MB · Solo PDF</div>
+          </div>
+          <div id="nd-drop-file" style="display:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.8" style="width:32px;height:32px;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <div style="flex:1;min-width:0">
+              <div id="nd-file-name" style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+              <div id="nd-file-size" style="font-size:0.76rem;color:var(--muted);margin-top:2px"></div>
+            </div>
+            <button type="button" class="btn-close" onclick="quitarArchivo(event)" title="Quitar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>
+        <div style="font-size:0.74rem;color:var(--muted);margin-top:6px;line-height:1.5">
+          El contenido exacto del PDF queda criptográficamente comprometido en la firma. Si alguien altera 1 byte del archivo, la firma deja de ser válida.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" style="display:flex;align-items:center;gap:8px">
+          <input type="checkbox" id="nd-multi-toggle" onchange="toggleFirmantesUI()">
+          Requiere múltiples firmas en orden
+        </label>
+        <div style="font-size:0.74rem;color:var(--muted);margin-top:4px;line-height:1.5">
+          Si está activo, el documento se firma en cadena por los firmantes en el orden indicado (1 → 2 → 3…). Cada firmante solo puede firmar cuando le toca su turno.
+        </div>
+
+        <div id="nd-firmantes-box" class="firmantes-builder" style="display:none;margin-top:10px">
+          <div class="firmantes-row">
+            <select id="nd-firmante-select"><option value="">— Selecciona un firmante para añadir —</option></select>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="agregarFirmante()">+ Añadir</button>
+          </div>
+          <div id="nd-firmantes-chain" class="firma-chain">
+            <span style="font-size:0.78rem;color:var(--muted)">Sin firmantes asignados todavía. El orden de añadido = orden de firma.</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -963,6 +1121,11 @@
       <div class="alert alert-warning" style="margin-bottom:16px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         El firmante debe ser una persona diferente al creador del documento.
+      </div>
+
+      <div id="emit-chain-box" style="display:none;margin-bottom:16px">
+        <div style="color:var(--muted);font-size:0.75rem;margin-bottom:6px;letter-spacing:0.05em">CADENA DE FIRMAS</div>
+        <div id="emit-chain" class="firma-chain"></div>
       </div>
       <div class="form-group">
         <label class="form-label">Tus 12 palabras (frase BIP39)</label>
@@ -1102,7 +1265,7 @@ window.switchView = (view) => {
   document.getElementById('topbar-subtitle').textContent = subtitle;
 
   if (view === 'documentos') cargarDocumentos();
-  if (view === 'usuarios') cargarUsuarios();
+  if (view === 'usuarios') { cargarUsuarios(); }
   if (view === 'resumen') cargarResumen();
   if (view === 'bitacora') cargarBitacora();
   if (view === 'llaves') cargarInfoClave();
@@ -1114,7 +1277,7 @@ async function cargarInicio() {
     const res = await docsAPI.list();
     allDocs = res.data?.documentos || res.data || [];
     const emitidos  = allDocs.filter(d => d.estado === 'emitido').length;
-    const borradores= allDocs.filter(d => d.estado === 'borrador').length;
+    const borradores= allDocs.filter(d => d.estado === 'borrador' || d.estado === 'en_firma').length;
     const revocados = allDocs.filter(d => d.estado === 'revocado').length;
 
     document.getElementById('stat-emitidos').textContent   = emitidos;
@@ -1167,10 +1330,18 @@ function renderDocTable(containerId, docs, minimal = false) {
     </tr></thead>
     <tbody>
       ${docs.map(d => {
-        const esMiDoc   = (parseInt(d.creado_por) === currentUser.id);
+        const myId = Number(currentUser.id);
+        const esMiDoc   = (Number(d.creado_por) === myId);
         const adminExento = currentUser.rol === 'administrador';
-        const puedeEmitir = d.estado === 'borrador' && canEmit && (!esMiDoc || adminExento);
-        const bloqueado   = d.estado === 'borrador' && canEmit && esMiDoc && !adminExento;
+        const esMulti = Number(d.total_firmantes || 0) > 0;
+        const esMiTurno = esMulti && Number(d.siguiente_usuario_id || 0) === myId;
+        const puedeEmitir = !esMulti
+          ? (d.estado === 'borrador' && canEmit && (!esMiDoc || adminExento))
+          : (d.estado === 'en_firma' && esMiTurno);
+        const bloqueadoLegacy = !esMulti && d.estado === 'borrador' && canEmit && esMiDoc && !adminExento;
+        const progreso = esMulti
+          ? `<span class="badge badge-en_firma" title="${d.firmas_completadas}/${d.total_firmantes} firmas · siguiente: ${escHtml(d.siguiente_usuario_nombre || '—')}">${d.firmas_completadas}/${d.total_firmantes} firmas</span>`
+          : '';
         return `
         <tr>
           <td class="folio-cell">${d.folio || '—'}</td>
@@ -1178,7 +1349,7 @@ function renderDocTable(containerId, docs, minimal = false) {
             <strong>${escHtml(d.titulo)}</strong>
             ${d.descripcion ? `<div style="font-size:0.76rem;color:var(--muted);margin-top:2px">${escHtml(d.descripcion.slice(0,60))}${d.descripcion.length>60?'…':''}</div>` : ''}
           </td>
-          <td><span class="badge badge-${d.estado}">${d.estado}</span></td>
+          <td><span class="badge badge-${d.estado}">${d.estado}</span> ${progreso}</td>
           <td style="font-size:0.82rem">
             <span style="color:${esMiDoc?'var(--green)':'var(--text)'}">
               ${escHtml(d.creador_nombre || '—')}
@@ -1186,19 +1357,28 @@ function renderDocTable(containerId, docs, minimal = false) {
             <div style="font-size:0.72rem;color:var(--muted2)">${fmtDate(d.fecha_creacion)}</div>
           </td>
           <td style="font-size:0.82rem">
-            ${d.firmado_por_nombre
-              ? `<span>${escHtml(d.firmado_por_nombre)}</span><div style="font-size:0.72rem;color:var(--muted2)">${fmtDate(d.fecha_emision)}</div>`
-              : `<span style="color:var(--muted2)">Pendiente</span>`}
+            ${esMulti
+              ? (d.estado === 'emitido'
+                  ? `<span>${d.total_firmantes} firmantes</span><div style="font-size:0.72rem;color:var(--muted2)">${fmtDate(d.fecha_emision)}</div>`
+                  : `<span style="color:var(--orange-d)">Turno: ${escHtml(d.siguiente_usuario_nombre || '—')}</span>`)
+              : (d.firmado_por_nombre
+                  ? `<span>${escHtml(d.firmado_por_nombre)}</span><div style="font-size:0.72rem;color:var(--muted2)">${fmtDate(d.fecha_emision)}</div>`
+                  : `<span style="color:var(--muted2)">Pendiente</span>`)}
           </td>
           ${!minimal ? `<td><div class="actions-cell">
             ${puedeEmitir ? `<button class="btn btn-primary btn-sm" onclick="openModalEmitir(${d.id},'${escHtml(d.titulo)}','${d.folio||''}','${escHtml(d.creador_nombre||'')}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               Firmar
             </button>` : ''}
-            ${bloqueado ? `<span title="No puedes firmar tu propio documento" style="font-size:0.75rem;color:var(--muted2);display:flex;align-items:center;gap:4px;cursor:default">
+            ${bloqueadoLegacy ? `<span title="No puedes firmar tu propio documento" style="font-size:0.75rem;color:var(--muted2);display:flex;align-items:center;gap:4px;cursor:default">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               Tu doc
             </span>` : ''}
+            ${esMulti && d.estado === 'en_firma' && !esMiTurno ? `<span title="Espera el turno del firmante actual" style="font-size:0.75rem;color:var(--muted2)">Esperando</span>` : ''}
+            ${d.ruta_archivo ? `<a href="/api/documentos-archivo.php?folio=${d.folio}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none" title="Abrir PDF">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              PDF
+            </a>` : ''}
             ${d.estado === 'emitido' && canRevoke ? `<button class="btn btn-danger btn-sm" onclick="openModalRevocar(${d.id})">Revocar</button>` : ''}
             ${d.estado === 'emitido' ? `<a href="verificar.html?folio=${d.folio}" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none">Verificar</a>` : ''}
           </div></td>` : ''}
@@ -1241,15 +1421,15 @@ async function cargarUsuarios() {
 let resumenEventos = [];
 
 const accionConfig = {
-  emitted:       { label: 'Emitido',        color: '#22C55E' },
-  created:       { label: 'Creado',         color: '#3B82F6' },
-  revoked:       { label: 'Revocado',       color: '#EF4444' },
-  updated:       { label: 'Editado',        color: '#94A3B8' },
-  deleted:       { label: 'Eliminado',      color: '#F97316' },
-  firma_invalida:{ label: 'Firma inválida', color: '#EF4444' },
-  login:         { label: 'Acceso',         color: '#8B5CF6' },
-  logout:        { label: 'Cierre sesión',  color: '#64748B' },
-  key_registered:{ label: 'Clave registrada', color: '#06B6D4' },
+  emitted:       { label: 'Emitido',        color: '#54b551' },
+  created:       { label: 'Creado',         color: '#1976d2' },
+  revoked:       { label: 'Revocado',       color: '#d92626' },
+  updated:       { label: 'Editado',        color: '#6d635a' },
+  deleted:       { label: 'Eliminado',      color: '#fd580b' },
+  firma_invalida:{ label: 'Firma inválida', color: '#d92626' },
+  login:         { label: 'Acceso',         color: '#7c3aed' },
+  logout:        { label: 'Cierre sesión',  color: '#998d80' },
+  key_registered:{ label: 'Clave registrada', color: '#0e7490' },
 };
 
 window.cargarResumen = async () => {
@@ -1305,9 +1485,9 @@ function renderTimeline(filtro) {
   }
 
   c.innerHTML = lista.map(e => {
-    const cfg   = accionConfig[e.accion] || { label: e.accion, color: '#64748B' };
+    const cfg   = accionConfig[e.accion] || { label: e.accion, color: '#998d80' };
     const failed = e.resultado === 'failed';
-    const dotColor = failed ? '#EF4444' : cfg.color;
+    const dotColor = failed ? '#d92626' : cfg.color;
     return `
       <div class="tl-item">
         <div class="tl-dot" style="background:${dotColor}"></div>
@@ -1375,6 +1555,21 @@ async function cargarInfoClave() {
 }
 
 // ── Mnemonic input grid helpers ────────────────────────────────────────────
+function rellenarGridConFrase(grid, frase) {
+  const palabras = (frase || '')
+    .toLowerCase()
+    .replace(/[^a-záéíóúñü\s]/gi, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  const inputs = grid.querySelectorAll('input');
+  inputs.forEach(inp => inp.value = '');
+  palabras.slice(0, 12).forEach((w, i) => { if (inputs[i]) inputs[i].value = w; });
+  const ultimoLleno = Math.min(palabras.length, 12) - 1;
+  const siguiente = inputs[ultimoLleno + 1] || inputs[11];
+  if (siguiente) siguiente.focus();
+}
+
 function buildMnemonicGrid(containerId) {
   const grid = document.getElementById(containerId);
   if (!grid || grid.children.length === 12) return;
@@ -1385,6 +1580,18 @@ function buildMnemonicGrid(containerId) {
              autocapitalize="off" spellcheck="false" placeholder="palabra"
              data-idx="${i}" data-grid="${containerId}">
     </div>`).join('');
+
+  // Paste delegado: cualquier paste dentro del grid llena desde la celda 1
+  // (orden BIP39 estricto). Se acepta texto separado por espacios, comas o saltos.
+  grid.addEventListener('paste', e => {
+    const texto = (e.clipboardData || window.clipboardData)?.getData('text') || '';
+    if (!texto.trim().includes(' ') && !texto.includes('\n') && !texto.includes(',')) {
+      // Texto de una sola palabra: deja el comportamiento nativo (pega en la celda enfocada)
+      return;
+    }
+    e.preventDefault();
+    rellenarGridConFrase(grid, texto);
+  });
 
   grid.querySelectorAll('input').forEach(inp => {
     inp.addEventListener('keydown', e => {
@@ -1398,15 +1605,6 @@ function buildMnemonicGrid(containerId) {
         const prev = grid.querySelector(`input[data-idx="${idx-1}"]`);
         if (prev) { prev.focus(); prev.value = ''; }
       }
-    });
-    inp.addEventListener('paste', e => {
-      e.preventDefault();
-      const words = (e.clipboardData.getData('text') || '').trim().split(/\s+/);
-      const inputs = grid.querySelectorAll('input');
-      const start  = +inp.dataset.idx;
-      words.forEach((w, i) => { if (inputs[start+i]) inputs[start+i].value = w; });
-      const nextEmpty = grid.querySelector(`input[data-idx="${start+words.length}"]`);
-      if (nextEmpty) nextEmpty.focus();
     });
   });
 }
@@ -1439,6 +1637,26 @@ window.generarMnemonicUI = async () => {
   document.getElementById('key-gen-result').style.display = 'block';
   document.getElementById('key-confirm').checked = false;
   document.getElementById('btn-registrar-key').disabled = true;
+};
+
+window.copiarMnemonic = async () => {
+  if (!mnemonicGenerated) return;
+  const btn = document.getElementById('btn-copiar-mnemonic');
+  const original = btn.innerHTML;
+  try {
+    await navigator.clipboard.writeText(mnemonicGenerated);
+    btn.innerHTML = '✓ Copiado al portapapeles';
+    setTimeout(() => { btn.innerHTML = original; }, 1800);
+  } catch(e) {
+    // Fallback para contextos sin Clipboard API (HTTP, etc.)
+    const ta = document.createElement('textarea');
+    ta.value = mnemonicGenerated;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); btn.innerHTML = '✓ Copiado'; setTimeout(() => { btn.innerHTML = original; }, 1800); }
+    catch { toast('No se pudo copiar — selecciona y copia manualmente', 'error'); }
+    document.body.removeChild(ta);
+  }
 };
 
 window.toggleBtnRegistrar = () => {
@@ -1490,20 +1708,117 @@ window.firmarDocUI = async () => {
   }
   try {
     await firmarDocumento(docId, words);
-    document.getElementById('sign-words').value = '';
+    clearMnemonicGrid('sign-words-grid');
+    document.getElementById('sign-doc-id').value = '';
     document.getElementById('key-sign-msg').innerHTML = `<div class="alert alert-success" style="margin-top:12px">Documento emitido correctamente.</div>`;
     toast('Documento firmado y emitido', 'success');
     cargarInicio();
+    cargarDocumentos();
   } catch(e) {
     document.getElementById('key-sign-msg').innerHTML = `<div class="alert alert-error" style="margin-top:12px">${e.message}</div>`;
   }
 };
 
 // ── Modales ────────────────────────────────────────────────────────────────
-window.openModalNuevoDoc  = () => openModal('modal-nuevo-doc');
+// ── Builder de firmantes (multi-firma) ─────────────────────────────────────
+let firmantesDisponibles = [];   // [{id, nombre, email, rol}]
+let firmantesSeleccionados = []; // [{id, nombre, rol}]
+
+window.toggleFirmantesUI = async () => {
+  const on = document.getElementById('nd-multi-toggle').checked;
+  document.getElementById('nd-firmantes-box').style.display = on ? '' : 'none';
+  if (on) {
+    try {
+      const res = await docsAPI.firmables();
+      firmantesDisponibles = res.data?.usuarios || [];
+    } catch(e) { toast('No se pudo cargar la lista de firmantes: ' + e.message, 'error'); }
+  }
+  refrescarSelectFirmantes();
+  renderChainBuilder();
+};
+
+function refrescarSelectFirmantes() {
+  const sel = document.getElementById('nd-firmante-select');
+  const usadosIds = new Set(firmantesSeleccionados.map(f => f.id));
+  const opciones = firmantesDisponibles
+    .filter(u => u.id !== currentUser.id && !usadosIds.has(u.id))
+    .map(u => `<option value="${u.id}">${escHtml(u.nombre)} — ${escHtml(u.rol)}</option>`)
+    .join('');
+  sel.innerHTML = `<option value="">— Selecciona un firmante para añadir —</option>${opciones}`;
+}
+
+window.agregarFirmante = () => {
+  const sel = document.getElementById('nd-firmante-select');
+  const id = parseInt(sel.value);
+  if (!id) return;
+  const user = firmantesDisponibles.find(u => u.id === id);
+  if (!user) return;
+  if (firmantesSeleccionados.length >= 10) { toast('Máximo 10 firmantes', 'error'); return; }
+  firmantesSeleccionados.push({ id: user.id, nombre: user.nombre, rol: user.rol });
+  refrescarSelectFirmantes();
+  renderChainBuilder();
+};
+
+window.quitarFirmante = (id) => {
+  firmantesSeleccionados = firmantesSeleccionados.filter(f => f.id !== id);
+  refrescarSelectFirmantes();
+  renderChainBuilder();
+};
+
+window.moverFirmante = (id, dir) => {
+  const i = firmantesSeleccionados.findIndex(f => f.id === id);
+  const j = i + dir;
+  if (i < 0 || j < 0 || j >= firmantesSeleccionados.length) return;
+  [firmantesSeleccionados[i], firmantesSeleccionados[j]] = [firmantesSeleccionados[j], firmantesSeleccionados[i]];
+  renderChainBuilder();
+};
+
+function renderChainBuilder() {
+  const cont = document.getElementById('nd-firmantes-chain');
+  const adminAlFinal = currentUser.rol === 'administrador';
+  if (firmantesSeleccionados.length === 0 && !adminAlFinal) {
+    cont.innerHTML = '<span style="font-size:0.78rem;color:var(--muted)">Sin firmantes asignados todavía. El orden de añadido = orden de firma.</span>';
+    return;
+  }
+  const chips = firmantesSeleccionados.map((f, idx) => {
+    const arrow = '<span class="firma-arrow">→</span>';
+    return `
+      <span class="firmante-chip">
+        <span class="num">${idx + 1}.</span>
+        <span>${escHtml(f.nombre)}</span>
+        <button title="Subir" onclick="moverFirmante(${f.id}, -1)" ${idx === 0 ? 'disabled style="opacity:0.3"' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button title="Bajar" onclick="moverFirmante(${f.id}, 1)" ${idx === firmantesSeleccionados.length - 1 ? 'disabled style="opacity:0.3"' : ''}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button title="Quitar" onclick="quitarFirmante(${f.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </span>${arrow}`;
+  }).join('');
+
+  // Admin creador firma al final (auto, no removible)
+  const adminChip = adminAlFinal ? `
+    <span class="firmante-chip" style="background:rgba(253,88,11,0.10);border-color:rgba(253,88,11,0.40)">
+      <span class="num">${firmantesSeleccionados.length + 1}.</span>
+      <span>${escHtml(currentUser.nombre)} <em style="color:var(--muted)">(tú · firma final)</em></span>
+    </span>` : '';
+
+  cont.innerHTML = chips + adminChip;
+}
+
+window.openModalNuevoDoc  = () => {
+  firmantesSeleccionados = [];
+  document.getElementById('nd-multi-toggle').checked = false;
+  document.getElementById('nd-firmantes-box').style.display = 'none';
+  renderChainBuilder();
+  openModal('modal-nuevo-doc');
+  setupDropZone();
+};
 window.openModalNuevoUsuario = () => openModal('modal-nuevo-usuario');
 
-window.openModalEmitir = (id, titulo, folio, creadorNombre) => {
+window.openModalEmitir = async (id, titulo, folio, creadorNombre) => {
   docToEmit = id;
   document.getElementById('emit-doc-titulo').textContent = titulo;
   document.getElementById('emit-doc-folio').textContent  = folio;
@@ -1511,6 +1826,30 @@ window.openModalEmitir = (id, titulo, folio, creadorNombre) => {
   document.getElementById('emit-msg').innerHTML = '';
   buildMnemonicGrid('emit-words-grid');
   clearMnemonicGrid('emit-words-grid');
+
+  // Mostrar cadena si es multi-firma
+  const chainBox = document.getElementById('emit-chain-box');
+  const chainEl  = document.getElementById('emit-chain');
+  chainBox.style.display = 'none';
+  try {
+    const res = await docsAPI.firmantes(id);
+    const fs = res.data?.firmantes || [];
+    if (fs.length > 0) {
+      const siguienteId = Number(res.data.siguiente_usuario_id);
+      chainEl.innerHTML = fs.map((f, idx) => {
+        const esActual = Number(f.usuario_id) === siguienteId;
+        const cls = f.estado === 'firmado' ? 'firmado' : (esActual ? 'actual' : 'pendiente');
+        const arrow = idx < fs.length - 1 ? '<span class="firma-arrow">→</span>' : '';
+        return `<span class="firma-step ${cls}">
+                  <span class="firma-step-num">${f.orden}</span>
+                  <span>${escHtml(f.nombre)}</span>
+                  ${f.estado === 'firmado' ? '✓' : (esActual ? '⏵ Tu turno' : '')}
+                </span>${arrow}`;
+      }).join('');
+      chainBox.style.display = '';
+    }
+  } catch(e) { /* doc sin firmantes, OK */ }
+
   openModal('modal-emitir');
 };
 
@@ -1531,7 +1870,6 @@ window.confirmarEmision = async () => {
   btn.innerHTML = '<span class="spinner"></span>Firmando…';
   try {
     await firmarDocumento(docToEmit, words);
-    document.getElementById('emit-words').value = '';
     closeModal('modal-emitir');
     toast('Documento firmado y emitido', 'success');
     cargarDocumentos();
@@ -1558,19 +1896,105 @@ window.confirmarRevocacion = async () => {
 window.crearDocumento = async () => {
   const titulo    = document.getElementById('nd-titulo').value.trim();
   const descripcion = document.getElementById('nd-descripcion').value.trim();
-  const contenido = document.getElementById('nd-contenido').value.trim();
-  if (!titulo || !contenido) { toast('Título y contenido son requeridos', 'error'); return; }
+  const fileInput = document.getElementById('nd-archivo');
+  const file      = fileInput.files[0];
+
+  if (!titulo) { toast('El título es requerido', 'error'); return; }
+  if (!file)   { toast('Debes seleccionar un archivo PDF', 'error'); return; }
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    toast('Solo se permiten archivos PDF', 'error'); return;
+  }
+  if (file.size > 25 * 1024 * 1024) { toast('El archivo excede 25 MB', 'error'); return; }
+
+  const fd = new FormData();
+  fd.append('titulo', titulo);
+  fd.append('descripcion', descripcion);
+  fd.append('archivo', file);
+
   try {
-    await docsAPI.create({ titulo, descripcion, contenido });
+    const multi = document.getElementById('nd-multi-toggle').checked;
+    const adminCreador = currentUser.rol === 'administrador';
+    if (multi && firmantesSeleccionados.length === 0 && !adminCreador) {
+      toast('Añade al menos un firmante o desactiva la multi-firma', 'error'); return;
+    }
+
+    const res = await fetch('/api/documentos-create.php', { method: 'POST', body: fd, credentials: 'include' });
+    const data = res.headers.get('content-type')?.includes('application/json') ? await res.json() : null;
+    if (!res.ok) throw new Error(data?.message || 'Error al crear documento');
+
+    // Si es multi-firma, asignar los firmantes en orden.
+    // Si el creador es administrador, se auto-añade al final de la cadena.
+    if (multi) {
+      const ids = firmantesSeleccionados.map(f => f.id);
+      if (currentUser.rol === 'administrador') ids.push(Number(currentUser.id));
+      try {
+        await docsAPI.asignarFirmantes(data.data.documento_id, ids);
+      } catch(e) {
+        toast(`Documento creado pero falló asignar firmantes: ${e.message}`, 'error');
+      }
+    }
+
     closeModal('modal-nuevo-doc');
     document.getElementById('nd-titulo').value = '';
     document.getElementById('nd-descripcion').value = '';
-    document.getElementById('nd-contenido').value = '';
-    toast('Documento creado', 'success');
+    document.getElementById('nd-multi-toggle').checked = false;
+    document.getElementById('nd-firmantes-box').style.display = 'none';
+    firmantesSeleccionados = [];
+    quitarArchivo();
+    toast(`Documento creado — ${data.data.folio}`, 'success');
     cargarDocumentos();
     cargarInicio();
   } catch(e) { toast(e.message, 'error'); }
 };
+
+// ── Drop zone para PDF ─────────────────────────────────────────────────────
+window.quitarArchivo = (e) => {
+  if (e) e.stopPropagation();
+  const drop = document.getElementById('nd-drop');
+  const input = document.getElementById('nd-archivo');
+  input.value = '';
+  drop.classList.remove('has-file');
+  document.getElementById('nd-drop-empty').style.display = '';
+  document.getElementById('nd-drop-file').style.display = 'none';
+};
+
+function setupDropZone() {
+  const drop  = document.getElementById('nd-drop');
+  const input = document.getElementById('nd-archivo');
+  if (!drop || !input || drop.dataset.bound) return;
+  drop.dataset.bound = '1';
+
+  const mostrar = (f) => {
+    if (!f) return;
+    document.getElementById('nd-file-name').textContent = f.name;
+    document.getElementById('nd-file-size').textContent =
+      `${(f.size/1024).toFixed(1)} KB · ${f.type || 'application/pdf'}`;
+    document.getElementById('nd-drop-empty').style.display = 'none';
+    document.getElementById('nd-drop-file').style.display  = 'flex';
+    drop.classList.add('has-file');
+  };
+
+  drop.addEventListener('click', (e) => {
+    if (e.target.closest('.btn-close')) return;
+    input.click();
+  });
+  input.addEventListener('change', () => mostrar(input.files[0]));
+
+  ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, (e) => {
+    e.preventDefault(); drop.classList.add('drag-over');
+  }));
+  ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, (e) => {
+    e.preventDefault(); drop.classList.remove('drag-over');
+  }));
+  drop.addEventListener('drop', (e) => {
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    const dt = new DataTransfer();
+    dt.items.add(f);
+    input.files = dt.files;
+    mostrar(f);
+  });
+}
 
 window.crearUsuario = async () => {
   const nombre   = document.getElementById('nu-nombre').value.trim();
@@ -1632,7 +2056,7 @@ const toastIcons = {
   warning: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
   info:    '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
 };
-const toastColors = { success: '#22C55E', error: '#EF4444', warning: '#F59E0B', info: '#3B82F6' };
+const toastColors = { success: '#54b551', error: '#d92626', warning: '#fbb122', info: '#1976d2' };
 let toastTimer;
 function toast(msg, type = 'info') {
   const el  = document.getElementById('toast');
@@ -1648,7 +2072,13 @@ function toast(msg, type = 'info') {
 
 async function apiFetchRaw(path, options = {}) {
   const res = await fetch(path, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...options });
-  return res.json();
+  const text = await res.text();
+  if (!res.ok && res.status === 401) { window.location.href = 'index.html'; throw new Error('Sesión expirada'); }
+  try { return JSON.parse(text); }
+  catch {
+    console.error(`apiFetchRaw: respuesta no-JSON de ${path}`, { status: res.status, body: text.slice(0, 200) });
+    throw new Error(`El servidor respondió ${res.status} con un mensaje no esperado. Revisa la consola.`);
+  }
 }
 
 // Expose to window for onclick handlers in dynamic HTML

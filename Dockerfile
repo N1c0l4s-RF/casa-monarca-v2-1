@@ -12,7 +12,13 @@ RUN apt-get update && apt-get install -y libssl-dev && rm -rf /var/lib/apt/lists
 # Configurar PHP
 RUN echo "session.gc_maxlifetime = 3600" >> /usr/local/etc/php/php.ini && \
     echo "session.cookie_httponly = 1" >> /usr/local/etc/php/php.ini && \
-    echo "session.use_strict_mode = 1" >> /usr/local/etc/php/php.ini
+    echo "session.use_strict_mode = 1" >> /usr/local/etc/php/php.ini && \
+    echo "upload_max_filesize = 25M" >> /usr/local/etc/php/php.ini && \
+    echo "post_max_size = 26M"        >> /usr/local/etc/php/php.ini && \
+    echo "memory_limit = 128M"        >> /usr/local/etc/php/php.ini
+
+# Directorio para archivos subidos (PDFs). Se monta como volume en compose.
+RUN mkdir -p /var/uploads && chown -R www-data:www-data /var/uploads && chmod 750 /var/uploads
 
 # Copiar configuración Apache
 COPY .docker/apache.conf /etc/apache2/sites-available/000-default.conf
