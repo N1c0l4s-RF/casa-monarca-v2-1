@@ -20,21 +20,21 @@ Muestra cómo el código del usuario y la CLI interactúan con el SDK y cómo es
 
 ```mermaid
 graph TD
-    subgraph Client [SDK - Python Client (Local)]
-        A[App del Desarrollador / CLI] -->|1. Invoca Métodos| B[CasaMonarcaClient]
-        B -->|2. Derivación y Firmas Locales| C[crypto.py Cryptographic Engine]
+    subgraph Client ["SDK - Python Client (Local)"]
+        A["App del Desarrollador / CLI"] -->|1. Invoca Métodos| B["CasaMonarcaClient"]
+        B -->|2. Derivación y Firmas Locales| C["crypto.py Cryptographic Engine"]
         C -->|Par de Llaves y Firma Compacta| B
     end
 
-    subgraph API [REST API Backend (Server)]
-        B -->|3. Peticiones HTTP REST| D[Servidor Apache / PHP Router]
-        D -->|Rutea Endpoints| E[src/api/*.php Controllers]
-        E -->|Carga Lógica de Negocio| F[src/modules/*.php Core Modules]
+    subgraph API ["REST API Backend (Server)"]
+        B -->|3. Peticiones HTTP REST| D["Servidor Apache / PHP Router"]
+        D -->|Rutea Endpoints| E["src/api/*.php Controllers"]
+        E -->|Carga Lógica de Negocio| F["src/modules/*.php Core Modules"]
     end
 
-    subgraph Storage [Infraestructura / Persistencia]
-        F -->|CRUD Metadatos y Llaves Públicas| G[(MySQL Database)]
-        F -->|Almacenamiento PDF| H[File System /var/uploads/]
+    subgraph Storage ["Infraestructura / Persistencia"]
+        F -->|CRUD Metadatos y Llaves Públicas| G[("MySQL Database")]
+        F -->|Almacenamiento PDF| H["File System /var/uploads/"]
     end
 ```
 
@@ -44,12 +44,12 @@ Describe el flujo completo de autenticación, creación de borrador y proceso de
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Dev as Developer Code / CLI
-    participant SDK as Python SDK (CasaMonarcaClient)
-    participant API as PHP REST API (src/api/)
-    participant Crypt as Local Crypto Engine (crypto.py)
-    database DB as MySQL Database
-    participant FS as File System (/var/uploads/)
+    actor Dev as "Developer Code / CLI"
+    participant SDK as "Python SDK (CasaMonarcaClient)"
+    participant API as "PHP REST API (src/api/)"
+    participant Crypt as "Local Crypto Engine (crypto.py)"
+    participant DB as "MySQL Database"
+    participant FS as "File System (/var/uploads/)"
 
     Note over Dev, Crypt: 1. Flujo de Autenticación
     Dev->>SDK: login(email, password)
