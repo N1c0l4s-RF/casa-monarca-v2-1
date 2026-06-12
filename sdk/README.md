@@ -102,6 +102,15 @@ sequenceDiagram
     SDK-->>Dev: Response Dictionary / Success Model
 ```
 
+## Guía Operativa de la Plataforma
+
+El ecosistema de Casa Monarca v2 integra controles de seguridad institucional, criptografía asimétrica y flujos de trabajo secuenciales para la gestión fidedigna de documentos. El proceso operativo sigue un ciclo de vida estrictamente definido que coordina la interfaz del servidor con las capacidades locales del cliente provistas por este SDK:
+
+1. Creación de Borradores: El proceso inicia cuando un emisor carga un documento en formato PDF a la plataforma a través del cliente. El servidor procesa el archivo binario, calcula su huella digital única utilizando el algoritmo hash SHA-256 y almacena el metadato en estado de borrador (borrador). Este estado de borrador permite realizar modificaciones o eliminaciones antes de que se inicie el flujo de firmas.
+2. Gestión de Identidades y Firmantes: Los administradores y emisores administran y asocian una lista ordenada de usuarios responsables de validar el documento. El sistema admite flujos multifirma secuenciales donde se especifica con precisión el orden jerárquico de las firmas. El documento entra en el estado de firma activa (en_firma), impidiendo cualquier alteración de su contenido original.
+3. Protocolo de Firma Criptográfica: La seguridad de Casa Monarca v2 se fundamenta en la firma local del lado del cliente (Client-Side Signing). Cuando llega el turno de un firmante, el SDK solicita el hash del borrador al servidor. Localmente, el SDK deriva la clave privada ECDSA P-256 a partir de una frase mnemónica BIP39 de 12 palabras en español. Utilizando esta clave privada, se genera una firma compacta de 64 bytes que se envía al servidor para su almacenamiento y comprobación contra la clave pública registrada. Este diseño con conocimiento cero (Zero-Knowledge) garantiza que la clave privada nunca viaje por la red ni se exponga a intermediarios.
+4. Emisión, Auditoría y Verificación: Una vez que todos los firmantes secuenciales completan satisfactoriamente su validación criptográfica, el estado del documento cambia a emitido (emitido). Cada una de las transacciones operativas y de firma es registrada automáticamente en la bitácora histórica de auditoría (auditoría/bitácora), permitiendo su trazabilidad. Cualquier actor externo o validador puede consultar el folio de un documento en el endpoint de consulta pública para verificar de forma independiente la validez matemática de la cadena de firmas.
+
 ## Instalación
 
 Se recomienda utilizar `uv` para una gestión rápida y moderna de dependencias. Puedes instalar el SDK localmente en tu proyecto o entorno virtual:
@@ -231,14 +240,14 @@ except CryptographyError as e:
     print(f"Error Criptográfico Local: {e.message}")
 ```
 
-## 📚 Documentación Extendida y Referencias
+## Documentación Extendida y Referencias
 
 * [Manual de Usuario - Equipo 3](./Documentos/Manual_Usuario_Equipo_3.pdf): Manual detallado que describe las funcionalidades, interfaz y flujos de usuario de la plataforma Casa Monarca v2.
 * [Reporte Ejecutivo - Equipo 3](./Documentos/Reporte_Ejecutivo_Equipo_3.pdf): Resumen de alto nivel del proyecto que resume el alcance, objetivos logrados y valor institucional del sistema.
 * [Reporte Técnico - Equipo 3](./Documentos/Reporte_Tecnico_Equipo_3.pdf): Documentación técnica profunda que detalla la arquitectura, diagramas de base de datos, protocolos de criptografía y decisiones de diseño.
 * [Prueba](./Documentos/prueba): Archivo genérico utilizado para pruebas de integración y validación de carga de documentos.
 
-## 📊 Hallazgos y Cobertura de Pruebas
+## Hallazgos y Cobertura de Pruebas
 
 Para garantizar la estabilidad y confiabilidad de Casa Monarca v2 SDK, se diseñó e implementó una infraestructura de pruebas automatizadas guiada por rigurosos estándares de ingeniería de calidad.
 
