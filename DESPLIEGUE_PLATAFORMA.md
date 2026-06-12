@@ -88,10 +88,10 @@ El flujo de ejecucion de las peticiones HTTP destinadas a recursos protegidos en
 ```mermaid
 graph TD
     Client["Cliente (SDK / CLI / Navegador)"] -->|1. Envia credenciales| LoginEndpoint["POST /auth/login.php"]
-    LoginEndpoint -->|2. Valida contra DB (Bcrypt cost 10)| VerifyCreds{"¿Credenciales validas?"}
+    LoginEndpoint -->|2. Valida contra DB con Bcrypt cost 10| VerifyCreds{"¿Credenciales validas?"}
     VerifyCreds -->|No| AuthErr["Retorna 401 Unauthorized"]
     VerifyCreds -->|Si| CreateSession["Inicia sesion (PHP Session Manager)"]
-    CreateSession -->|3. Responde Cookie PHPSESSID (HttpOnly, Secure)| Client
+    CreateSession -->|3. Responde Cookie PHPSESSID HttpOnly y Secure| Client
     
     Client -->|4. Envia peticion con Cookie PHPSESSID| APIEndpoint["GET /api/documentos-list.php"]
     APIEndpoint -->|5. Intercepta Middleware de Autenticacion| CheckSession{"¿Existe PHPSESSID activa?"}
