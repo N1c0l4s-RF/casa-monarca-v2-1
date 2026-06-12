@@ -1,6 +1,6 @@
 # Casa Monarca SDK
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](https://opensource.org/licenses/MIT) [![Plataforma](https://img.shields.io/badge/Documentaci%C3%B3n-Despliegue_de_Plataforma-blue?style=for-the-badge)](./DESPLIEGUE_PLATAFORMA.md)
 [![Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/sdk-v1.0.0-green.svg)]()
 [![Package Manager](https://img.shields.io/badge/package--manager-uv-purple.svg)](https://github.com/astral-sh/uv)
